@@ -6,7 +6,7 @@ A collection of CRUD (Create, Read, Update, Delete) implementations across vario
 
 This repo demonstrates how to build basic CRUD operations in different tech stacks. Each implementation covers the same core functionality, making it easy to compare approaches across languages and frameworks.
 
-## 🚀 Languages & Frameworks
+## Languages & Frameworks
 
 > Each folder contains its own `README.md` with setup and run instructions.
 - Python
