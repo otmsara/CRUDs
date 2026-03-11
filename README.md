@@ -2,6 +2,8 @@
 
 A collection of CRUD (Create, Read, Update, Delete) implementations across various programming languages and frameworks — for learning, comparison, and reference.
 
+## Project still under development
+
 ## About
 
 This repo demonstrates how to build basic CRUD operations in different tech stacks. Each implementation covers the same core functionality, making it easy to compare approaches across languages and frameworks.
