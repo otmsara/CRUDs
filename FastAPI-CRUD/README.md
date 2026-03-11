@@ -48,25 +48,3 @@ ReDoc: 👉 <http://127.0.0.1:8000/redoc>
 ## Generate dependencies file
 
 pip freeze > requirements.txt
-
-## Create the Main App File
-
-Create a file called **`main.py`**
-
-```jsx
-from fastapi import FastAPI
-
-app = FastAPI()
-
-@app.get("/")
-def read_root():
-    return {"message": "Hello FastAPI"}
-```
-
-## Example Route (API Endpoint)
-
-```python
-@app.get("/items/{item_id}")
-def get_item(item_id: int):
-    return {"item_id": item_id}
-```
