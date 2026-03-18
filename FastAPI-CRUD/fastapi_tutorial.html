@@ -1,0 +1,1634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FastAPI — Employee Management Tutorial</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0f1a;
+    --bg2: #111827;
+    --bg3: #1a2235;
+    --surface: #1e2d45;
+    --border: #2a3f5f;
+    --accent: #00d4aa;
+    --accent2: #3b82f6;
+    --accent3: #f59e0b;
+    --text: #e8f0fe;
+    --muted: #8b9ec3;
+    --dim: #4a5a78;
+    --danger: #ef4444;
+    --success: #10b981;
+    --warning: #f59e0b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #0b0f1a 0%, #0f1d3a 50%, #0b1a2e 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 3rem 2rem 2.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 120% at 50% -20%, rgba(0,212,170,.12), transparent);
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,212,170,.12);
+    border: 1px solid rgba(0,212,170,.3);
+    border-radius: 100px;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    margin-bottom: 1.2rem;
+  }
+  header h1 {
+    font-size: clamp(2rem, 5vw, 3.4rem);
+    font-weight: 700;
+    line-height: 1.15;
+    background: linear-gradient(135deg, #fff 30%, var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: .6rem;
+  }
+  header p {
+    font-size: 1.05rem;
+    color: var(--muted);
+    font-weight: 300;
+    max-width: 520px;
+    margin: 0 auto 1.6rem;
+    line-height: 1.7;
+  }
+  .tech-pills {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+  .pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--muted);
+  }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 0;
+    min-height: calc(100vh - 200px);
+  }
+
+  /* ── SIDEBAR ── */
+  nav {
+    border-right: 1px solid var(--border);
+    padding: 1.5rem 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    background: var(--bg2);
+  }
+  nav::-webkit-scrollbar { width: 3px; }
+  nav::-webkit-scrollbar-track { background: transparent; }
+  nav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+  .nav-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--dim);
+    padding: .5rem 1.2rem .3rem;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: .55rem 1.2rem;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: all .2s;
+    line-height: 1.4;
+  }
+  .nav-item:hover { color: var(--text); background: rgba(255,255,255,.03); }
+  .nav-item.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: rgba(0,212,170,.07);
+    font-weight: 600;
+  }
+  .nav-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--dim);
+    min-width: 18px;
+  }
+
+  /* ── MAIN CONTENT ── */
+  main {
+    padding: 2rem 2.5rem;
+    overflow-y: auto;
+  }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .section-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.2rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-header .tag {
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: .5rem;
+    display: block;
+  }
+  .section-header h2 {
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: .5rem;
+  }
+  .section-header p {
+    font-size: .95rem;
+    color: var(--muted);
+    line-height: 1.8;
+    max-width: 640px;
+  }
+
+  /* ── PROSE ── */
+  .prose { max-width: 720px; }
+  .prose h3 { font-size: 1.1rem; font-weight: 600; color: var(--text); margin: 1.8rem 0 .6rem; }
+  .prose h4 { font-size: .95rem; font-weight: 600; color: var(--accent); margin: 1.4rem 0 .4rem; font-family: 'JetBrains Mono', monospace; }
+  .prose p { font-size: .94rem; color: var(--muted); line-height: 1.85; margin-bottom: .9rem; }
+  .prose ul { list-style: none; margin: .5rem 0 1rem; }
+  .prose ul li {
+    font-size: .93rem;
+    color: var(--muted);
+    line-height: 1.7;
+    padding: .25rem 0 .25rem 1.4rem;
+    position: relative;
+  }
+  .prose ul li::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .prose strong { color: var(--text); font-weight: 600; }
+
+  /* ── CODE BLOCKS ── */
+  .code-block {
+    background: #060c18;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin: 1.2rem 0;
+    overflow: hidden;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .6rem 1rem;
+    background: rgba(255,255,255,.03);
+    border-bottom: 1px solid var(--border);
+  }
+  .code-lang {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  .code-file {
+    font-size: 11px;
+    color: var(--accent);
+  }
+  .copy-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 3px 10px;
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .2s;
+    font-family: 'Sora', sans-serif;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+  .copy-btn.copied { color: var(--success); border-color: var(--success); }
+  pre {
+    padding: 1.2rem 1rem;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #c9d1d9;
+  }
+  pre::-webkit-scrollbar { height: 4px; }
+  pre::-webkit-scrollbar-track { background: transparent; }
+  pre::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+  /* Syntax highlighting */
+  .kw  { color: #ff7b72; } /* keywords */
+  .fn  { color: #79c0ff; } /* functions */
+  .st  { color: #a5d6ff; } /* strings */
+  .cm  { color: #8b949e; font-style: italic; } /* comments */
+  .tp  { color: #ffa657; } /* types */
+  .dc  { color: #d2a8ff; } /* decorators */
+  .nm  { color: var(--accent); } /* numbers */
+  .pr  { color: #e3b341; } /* properties */
+  .op  { color: #6e7681; } /* operators */
+
+  /* ── CALLOUT BOXES ── */
+  .callout {
+    display: flex;
+    gap: 12px;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    margin: 1.2rem 0;
+    font-size: .9rem;
+    line-height: 1.7;
+  }
+  .callout-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+  .callout.info { background: rgba(59,130,246,.1); border: 1px solid rgba(59,130,246,.25); color: #93c5fd; }
+  .callout.tip { background: rgba(0,212,170,.08); border: 1px solid rgba(0,212,170,.2); color: #6ee7d4; }
+  .callout.warn { background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.2); color: #fcd34d; }
+  .callout.danger { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.2); color: #fca5a5; }
+
+  /* ── ENDPOINT CARDS ── */
+  .endpoint-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    margin: .8rem 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .method-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 5px;
+    min-width: 52px;
+    text-align: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .method-get { background: rgba(16,185,129,.2); color: #34d399; border: 1px solid rgba(16,185,129,.3); }
+  .method-post { background: rgba(59,130,246,.2); color: #60a5fa; border: 1px solid rgba(59,130,246,.3); }
+  .method-delete { background: rgba(239,68,68,.2); color: #f87171; border: 1px solid rgba(239,68,68,.3); }
+  .method-put { background: rgba(245,158,11,.2); color: #fbbf24; border: 1px solid rgba(245,158,11,.3); }
+  .endpoint-path { font-family: 'JetBrains Mono', monospace; font-size: .9rem; color: var(--text); margin-bottom: .25rem; }
+  .endpoint-desc { font-size: .85rem; color: var(--muted); }
+
+  /* ── STEP INDICATORS ── */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 1.2rem 0;
+  }
+  .step {
+    display: flex;
+    gap: 16px;
+    position: relative;
+  }
+  .step-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .step-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+    flex-shrink: 0;
+    z-index: 1;
+  }
+  .step-line {
+    width: 2px;
+    flex: 1;
+    background: var(--border);
+    margin: 4px 0;
+    min-height: 20px;
+  }
+  .step-content { padding: 2px 0 1.4rem; flex: 1; }
+  .step-title { font-weight: 600; font-size: .95rem; color: var(--text); margin-bottom: .3rem; }
+  .step-body { font-size: .88rem; color: var(--muted); line-height: 1.7; }
+
+  /* ── SCHEMA TABLE ── */
+  .schema-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .88rem;
+    margin: 1rem 0;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .schema-table th {
+    background: var(--surface);
+    padding: .6rem 1rem;
+    text-align: left;
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .schema-table td {
+    padding: .6rem 1rem;
+    border-bottom: 1px solid rgba(42,63,95,.5);
+    color: var(--muted);
+    vertical-align: top;
+  }
+  .schema-table tr:last-child td { border-bottom: none; }
+  .schema-table .field-name { font-family: 'JetBrains Mono', monospace; color: var(--accent2); font-size: .85rem; }
+  .schema-table .field-type { font-family: 'JetBrains Mono', monospace; color: var(--accent3); font-size: .83rem; }
+  .schema-table .required { color: var(--danger); font-size: .75rem; font-weight: 600; }
+  .schema-table .optional { color: var(--dim); font-size: .75rem; }
+
+  /* ── NAV FOOTER ── */
+  .section-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+  .nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: .6rem 1.2rem;
+    font-size: .88rem;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .2s;
+    font-family: 'Sora', sans-serif;
+  }
+  .nav-btn:hover { color: var(--text); border-color: var(--accent); background: rgba(0,212,170,.06); }
+  .nav-btn.primary { background: rgba(0,212,170,.12); border-color: rgba(0,212,170,.4); color: var(--accent); }
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+    width: 120px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 99px;
+    transition: width .4s ease;
+  }
+  .progress-label { font-size: 11px; color: var(--dim); text-align: center; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+
+  /* ── SCROLLBAR ── */
+  main::-webkit-scrollbar { width: 4px; }
+  main::-webkit-scrollbar-track { background: transparent; }
+  main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+    nav { display: none; }
+    main { padding: 1.5rem 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">🚀 Full Course</div>
+  <h1>FastAPI<br>Employee Management</h1>
+  <p>Build a production-ready REST API with authentication, database integration, and full CRUD operations.</p>
+  <div class="tech-pills">
+    <span class="pill">Python 3.10+</span>
+    <span class="pill">FastAPI</span>
+    <span class="pill">SQLAlchemy</span>
+    <span class="pill">JWT Auth</span>
+    <span class="pill">Pydantic v2</span>
+    <span class="pill">SQLite</span>
+    <span class="pill">Uvicorn</span>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <nav>
+    <div class="nav-section-label">Foundation</div>
+    <div class="nav-item active" onclick="show(0)" id="n0"><span class="nav-num">01</span>Web App Architecture</div>
+    <div class="nav-item" onclick="show(1)" id="n1"><span class="nav-num">02</span>Project Setup</div>
+    <div class="nav-item" onclick="show(2)" id="n2"><span class="nav-num">03</span>FastAPI Basics</div>
+    <div class="nav-item" onclick="show(3)" id="n3"><span class="nav-num">04</span>Auto Docs</div>
+
+    <div class="nav-section-label" style="margin-top:.8rem">Routing</div>
+    <div class="nav-item" onclick="show(4)" id="n4"><span class="nav-num">05</span>GET & Fetch Employees</div>
+    <div class="nav-item" onclick="show(5)" id="n5"><span class="nav-num">06</span>Path Parameters</div>
+    <div class="nav-item" onclick="show(6)" id="n6"><span class="nav-num">07</span>Errors & Status Codes</div>
+    <div class="nav-item" onclick="show(7)" id="n7"><span class="nav-num">08</span>Query Parameters</div>
+    <div class="nav-item" onclick="show(8)" id="n8"><span class="nav-num">09</span>Request Body & POST</div>
+    <div class="nav-item" onclick="show(9)" id="n9"><span class="nav-num">10</span>Output & Pydantic</div>
+
+    <div class="nav-section-label" style="margin-top:.8rem">Database</div>
+    <div class="nav-item" onclick="show(10)" id="n10"><span class="nav-num">11</span>DB Connection</div>
+    <div class="nav-item" onclick="show(11)" id="n11"><span class="nav-num">12</span>Create Employees</div>
+    <div class="nav-item" onclick="show(12)" id="n12"><span class="nav-num">13</span>Retrieve from DB</div>
+    <div class="nav-item" onclick="show(13)" id="n13"><span class="nav-num">14</span>Delete Employees</div>
+
+    <div class="nav-section-label" style="margin-top:.8rem">Security</div>
+    <div class="nav-item" onclick="show(14)" id="n14"><span class="nav-num">15</span>JWT Authentication</div>
+    <div class="nav-item" onclick="show(15)" id="n15"><span class="nav-num">16</span>Protect Endpoints</div>
+  </nav>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- SECTION 0: Architecture -->
+    <div class="section active" id="s0">
+      <div class="section-header">
+        <span class="tag">Chapter 01</span>
+        <h2>Web App Architecture & Theory</h2>
+        <p>Understand the client-server model and how FastAPI fits into a modern REST API architecture before writing a single line of code.</p>
+      </div>
+      <div class="prose">
+        <h3>The Client-Server Model</h3>
+        <p>A web application consists of two main parts: a <strong>client</strong> (browser, mobile app, or another service) and a <strong>server</strong>. The client sends HTTP requests; the server processes them and returns responses.</p>
+
+        <div class="callout tip">
+          <span class="callout-icon">💡</span>
+          <div><strong>FastAPI is the server.</strong> It receives HTTP requests, runs your Python logic, talks to a database, and returns JSON responses to whoever called it.</div>
+        </div>
+
+        <h3>REST API Principles</h3>
+        <ul>
+          <li><strong>Resources</strong> — everything is a resource (employees, users, departments)</li>
+          <li><strong>HTTP Methods</strong> — GET (read), POST (create), PUT/PATCH (update), DELETE (remove)</li>
+          <li><strong>Stateless</strong> — each request carries all needed information</li>
+          <li><strong>JSON</strong> — standard data exchange format</li>
+        </ul>
+
+        <h3>Our Project Architecture</h3>
+        <div class="steps">
+          <div class="step">
+            <div class="step-left"><div class="step-dot">1</div><div class="step-line"></div></div>
+            <div class="step-content"><div class="step-title">Client → HTTP Request</div><div class="step-body">A frontend, Postman, or curl sends a request like <code>GET /employees/42</code></div></div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-dot">2</div><div class="step-line"></div></div>
+            <div class="step-content"><div class="step-title">FastAPI Router</div><div class="step-body">FastAPI matches the URL to a Python function (called a <em>path operation</em>)</div></div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-dot">3</div><div class="step-line"></div></div>
+            <div class="step-content"><div class="step-title">Business Logic</div><div class="step-body">Your function validates input (via Pydantic), checks auth (JWT), runs logic</div></div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-dot">4</div><div class="step-line"></div></div>
+            <div class="step-content"><div class="step-title">Database (SQLAlchemy)</div><div class="step-body">Data is fetched or written to SQLite via SQLAlchemy ORM</div></div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-dot">5</div></div>
+            <div class="step-content"><div class="step-title">JSON Response</div><div class="step-body">FastAPI serializes the result to JSON and returns it with proper HTTP status code</div></div>
+          </div>
+        </div>
+
+        <h3>Final Endpoints We'll Build</h3>
+        <div class="endpoint-card"><span class="method-badge method-get">GET</span><div><div class="endpoint-path">/employees</div><div class="endpoint-desc">List all employees (with optional query filters)</div></div></div>
+        <div class="endpoint-card"><span class="method-badge method-get">GET</span><div><div class="endpoint-path">/employees/{id}</div><div class="endpoint-desc">Get a single employee by ID</div></div></div>
+        <div class="endpoint-card"><span class="method-badge method-post">POST</span><div><div class="endpoint-path">/employees</div><div class="endpoint-desc">Create a new employee record</div></div></div>
+        <div class="endpoint-card"><span class="method-badge method-delete">DELETE</span><div><div class="endpoint-path">/employees/{id}</div><div class="endpoint-desc">Delete an employee</div></div></div>
+        <div class="endpoint-card"><span class="method-badge method-post">POST</span><div><div class="endpoint-path">/auth/login</div><div class="endpoint-desc">Authenticate and receive JWT token</div></div></div>
+      </div>
+      <div class="section-nav">
+        <div></div>
+        <div style="text-align:center">
+          <div class="progress-bar"><div class="progress-fill" style="width:6%"></div></div>
+          <div class="progress-label">1 / 16</div>
+        </div>
+        <button class="nav-btn primary" onclick="show(1)">Next: Project Setup →</button>
+      </div>
+    </div>
+
+    <!-- SECTION 1: Setup -->
+    <div class="section" id="s1">
+      <div class="section-header">
+        <span class="tag">Chapter 02</span>
+        <h2>Project Setup & Install</h2>
+        <p>Create a virtual environment and install all dependencies needed for the project.</p>
+      </div>
+      <div class="prose">
+        <h3>Project File Structure</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">tree</span><span class="code-file">project layout</span></div>
+          <pre>employees_api/
+├── main.py           <span class="cm"># FastAPI app entry point</span>
+├── database.py       <span class="cm"># DB engine + session</span>
+├── models.py         <span class="cm"># SQLAlchemy table models</span>
+├── schemas.py        <span class="cm"># Pydantic I/O schemas</span>
+├── routers/
+│   ├── employees.py  <span class="cm"># Employee routes</span>
+│   └── auth.py       <span class="cm"># Auth routes</span>
+└── requirements.txt</pre>
+        </div>
+
+        <h3>1. Create Virtual Environment</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="cm"># Create and activate a virtual environment</span>
+python -m venv venv
+
+<span class="cm"># macOS / Linux</span>
+source venv/bin/activate
+
+<span class="cm"># Windows</span>
+venv\Scripts\activate</pre>
+        </div>
+
+        <h3>2. Install Dependencies</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre>pip install fastapi uvicorn sqlalchemy python-jose passlib python-multipart</pre>
+        </div>
+
+        <h3>requirements.txt</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">txt</span><span class="code-file">requirements.txt</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre>fastapi==0.110.0
+uvicorn==0.29.0
+sqlalchemy==2.0.28
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.9</pre>
+        </div>
+
+        <div class="callout info">
+          <span class="callout-icon">ℹ️</span>
+          <div><strong>What each package does:</strong> <code>fastapi</code> = the web framework · <code>uvicorn</code> = ASGI server that runs FastAPI · <code>sqlalchemy</code> = database ORM · <code>python-jose</code> = JWT tokens · <code>passlib</code> = password hashing · <code>python-multipart</code> = form data parsing</div>
+        </div>
+      </div>
+      <div class="section-nav">
+        <button class="nav-btn" onclick="show(0)">← Architecture</button>
+        <div style="text-align:center">
+          <div class="progress-bar"><div class="progress-fill" style="width:12%"></div></div>
+          <div class="progress-label">2 / 16</div>
+        </div>
+        <button class="nav-btn primary" onclick="show(2)">Next: FastAPI Basics →</button>
+      </div>
+    </div>
+
+    <!-- SECTION 2: FastAPI Setup -->
+    <div class="section" id="s2">
+      <div class="section-header">
+        <span class="tag">Chapter 03</span>
+        <h2>FastAPI Setup & Basics</h2>
+        <p>Create your first FastAPI application and understand the core concepts: the app instance, decorators, and path operations.</p>
+      </div>
+      <div class="prose">
+        <h3>Your First FastAPI App</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-file">main.py</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI
+
+<span class="cm"># 1. Create the FastAPI instance — this IS your application</span>
+app = FastAPI(
+    title=<span class="st">"Employees API"</span>,
+    description=<span class="st">"Manage company employees"</span>,
+    version=<span class="st">"1.0.0"</span>
+)
+
+<span class="cm"># 2. A path operation — GET request at the root URL "/"</span>
+<span class="dc">@app.get</span>(<span class="st">"/"</span>)
+<span class="kw">def</span> <span class="fn">root</span>():
+    <span class="kw">return</span> {<span class="st">"message"</span>: <span class="st">"Employees API is running 🚀"</span>}
+
+<span class="cm"># 3. Another route example</span>
+<span class="dc">@app.get</span>(<span class="st">"/health"</span>)
+<span class="kw">def</span> <span class="fn">health_check</span>():
+    <span class="kw">return</span> {<span class="st">"status"</span>: <span class="st">"ok"</span>}</pre>
+        </div>
+
+        <h3>Run the Server</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="cm"># --reload = auto-restart on file changes (dev only)</span>
+uvicorn main:app --reload
+
+<span class="cm"># Output:</span>
+<span class="cm"># INFO:     Uvicorn running on http://127.0.0.1:8000</span></pre>
+        </div>
+
+        <div class="callout tip">
+          <span class="callout-icon">💡</span>
+          <div><strong>Anatomy of <code>@app.get("/")</code>:</strong> <code>app</code> is your FastAPI instance · <code>.get</code> is the HTTP method · <code>"/"</code> is the URL path. The function below it runs when that URL is requested.</div>
+        </div>
+
+        <h3>Key Concepts</h3>
+        <ul>
+          <li><strong>Path operation decorator</strong> — <code>@app.get()</code>, <code>@app.post()</code>, etc. register routes</li>
+          <li><strong>Path operation function</strong> — the Python function that runs when the route is hit</li>
+          <li><strong>Automatic JSON</strong> — return a dict and FastAPI auto-converts it to JSON</li>
+          <li><strong>Async support</strong> — use <code>async def</code> instead of <code>def</code> for non-blocking I/O</li>
+        </ul>
+      </div>
+      <div class="section-nav">
+        <button class="nav-btn" onclick="show(1)">← Setup</button>
+        <div style="text-align:center">
+          <div class="progress-bar"><div class="progress-fill" style="width:19%"></div></div>
+          <div class="progress-label">3 / 16</div>
+        </div>
+        <button class="nav-btn primary" onclick="show(3)">Next: Auto Docs →</button>
+      </div>
+    </div>
+
+    <!-- SECTION 3: Docs -->
+    <div class="section" id="s3">
+      <div class="section-header">
+        <span class="tag">Chapter 04</span>
+        <h2>FastAPI Auto Docs</h2>
+        <p>One of FastAPI's killer features: automatic interactive API documentation generated from your code.</p>
+      </div>
+      <div class="prose">
+        <h3>Two Free Documentation UIs</h3>
+        <div class="endpoint-card"><span class="method-badge method-get">UI</span><div><div class="endpoint-path">http://localhost:8000/docs</div><div class="endpoint-desc">Swagger UI — Interactive, test your endpoints directly in the browser</div></div></div>
+        <div class="endpoint-card"><span class="method-badge method-get">UI</span><div><div class="endpoint-path">http://localhost:8000/redoc</div><div class="endpoint-desc">ReDoc — Clean, read-focused alternative documentation</div></div></div>
+        <div class="endpoint-card"><span class="method-badge method-get">JSON</span><div><div class="endpoint-path">http://localhost:8000/openapi.json</div><div class="endpoint-desc">Raw OpenAPI schema (can be imported into Postman, etc.)</div></div></div>
+
+        <div class="callout tip">
+          <span class="callout-icon">⚡</span>
+          <div>FastAPI generates this automatically from your type hints and Pydantic models. No manual documentation needed.</div>
+        </div>
+
+        <h3>Enhance Docs with Metadata</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-file">main.py</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI
+
+app = FastAPI(
+    title=<span class="st">"Employees API"</span>,
+    description=<span class="st">"""
+## 🏢 Employee Management System
+
+Manage your company's workforce via REST API.
+
+### Features
+- Full CRUD on employees
+- JWT-based authentication
+- Role-based access
+    """</span>,
+    version=<span class="st">"1.0.0"</span>,
+    contact={<span class="st">"name"</span>: <span class="st">"Dev Team"</span>, <span class="st">"email"</span>: <span class="st">"dev@company.com"</span>}
+)
+
+<span class="cm"># Tag your routes for grouping in the docs</span>
+<span class="dc">@app.get</span>(<span class="st">"/employees"</span>, tags=[<span class="st">"Employees"</span>])
+<span class="kw">def</span> <span class="fn">get_employees</span>():
+    <span class="kw">return</span> []</pre>
+        </div>
+      </div>
+      <div class="section-nav">
+        <button class="nav-btn" onclick="show(2)">← FastAPI Basics</button>
+        <div style="text-align:center">
+          <div class="progress-bar"><div class="progress-fill" style="width:25%"></div></div>
+          <div class="progress-label">4 / 16</div>
+        </div>
+        <button class="nav-btn primary" onclick="show(4)">Next: GET Employees →</button>
+      </div>
+    </div>
+
+    <!-- SECTION 4: GET -->
+    <div class="section" id="s4">
+      <div class="section-header">
+        <span class="tag">Chapter 05</span>
+        <h2>GET & Fetching Employees</h2>
+        <p>Build the first real endpoint — returning a list of employees using static data (before we connect a database).</p>
+      </div>
+      <div class="prose">
+        <h3>GET All Employees</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-file">main.py</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI
+
+app = FastAPI()
+
+<span class="cm"># Fake data (before database integration)</span>
+fake_employees = [
+    {<span class="st">"id"</span>: <span class="nm">1</span>, <span class="st">"name"</span>: <span class="st">"Alice Johnson"</span>, <span class="st">"role"</span>: <span class="st">"Engineer"</span>, <span class="st">"salary"</span>: <span class="nm">75000</span>},
+    {<span class="st">"id"</span>: <span class="nm">2</span>, <span class="st">"name"</span>: <span class="st">"Bob Smith"</span>, <span class="st">"role"</span>: <span class="st">"Designer"</span>, <span class="st">"salary"</span>: <span class="nm">65000</span>},
+    {<span class="st">"id"</span>: <span class="nm">3</span>, <span class="st">"name"</span>: <span class="st">"Carol White"</span>, <span class="st">"role"</span>: <span class="st">"Manager"</span>, <span class="st">"salary"</span>: <span class="nm">90000</span>},
+]
+
+<span class="dc">@app.get</span>(<span class="st">"/employees"</span>, tags=[<span class="st">"Employees"</span>])
+<span class="kw">def</span> <span class="fn">get_all_employees</span>():
+    <span class="kw">return</span> fake_employees</pre>
+        </div>
+
+        <h3>Test It</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">bash</span></div>
+          <pre>curl http://localhost:8000/employees
+
+<span class="cm"># Response:</span>
+[
+  {<span class="st">"id"</span>: <span class="nm">1</span>, <span class="st">"name"</span>: <span class="st">"Alice Johnson"</span>, <span class="st">"role"</span>: <span class="st">"Engineer"</span>, <span class="st">"salary"</span>: <span class="nm">75000</span>},
+  ...
+]</pre>
+        </div>
+
+        <div class="callout info">
+          <span class="callout-icon">ℹ️</span>
+          <div>FastAPI automatically converts Python dicts and lists to JSON. The HTTP response status is <strong>200 OK</strong> by default for GET requests.</div>
+        </div>
+      </div>
+      <div class="section-nav">
+        <button class="nav-btn" onclick="show(3)">← Docs</button>
+        <div style="text-align:center">
+          <div class="progress-bar"><div class="progress-fill" style="width:31%"></div></div>
+          <div class="progress-label">5 / 16</div>
+        </div>
+        <button class="nav-btn primary" onclick="show(5)">Next: Path Parameters →</button>
+      </div>
+    </div>
+
+    <!-- SECTION 5: Path Params -->
+    <div class="section" id="s5">
+      <div class="section-header">
+        <span class="tag">Chapter 06</span>
+        <h2>Path Parameters</h2>
+        <p>Capture dynamic values from the URL — like an employee ID — using Python's type annotations.</p>
+      </div>
+      <div class="prose">
+        <h3>Defining a Path Parameter</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-file">main.py</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="cm"># {employee_id} in the path becomes a parameter</span>
+<span class="dc">@app.get</span>(<span class="st">"/employees/{employee_id}"</span>)
+<span class="kw">def</span> <span class="fn">get_employee</span>(employee_id: <span class="tp">int</span>):
+    <span class="cm"># FastAPI automatically:</span>
+    <span class="cm"># 1. Extracts the value from the URL</span>
+    <span class="cm"># 2. Converts it to int (type annotation)</span>
+    <span class="cm"># 3. Validates it (errors if not a number)</span>
+    
+    employee = <span class="fn">next</span>(
+        (e <span class="kw">for</span> e <span class="kw">in</span> fake_employees <span class="kw">if</span> e[<span class="st">"id"</span>] == employee_id),
+        <span class="kw">None</span>
+    )
+    <span class="kw">return</span> employee</pre>
+        </div>
+
+        <div class="callout tip">
+          <span class="callout-icon">💡</span>
+          <div>The type annotation <code>employee_id: int</code> does double duty — it tells FastAPI the expected type AND Python type checkers about it. If you pass <code>/employees/abc</code>, FastAPI returns a <strong>422 Unprocessable Entity</strong> automatically.</div>
+        </div>
+
+        <h3>Multiple Path Parameters</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="dc">@app.get</span>(<span class="st">"/departments/{dept_id}/employees/{emp_id}"</span>)
+<span class="kw">def</span> <span class="fn">get_dept_employee</span>(dept_id: <span class="tp">int</span>, emp_id: <span class="tp">int</span>):
+    <span class="kw">return</span> {<span class="st">"dept"</span>: dept_id, <span class="st">"employee"</span>: emp_id}</pre>
+        </div>
+
+        <h3>Path Parameter Validation</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="kw">from</span> fastapi <span class="kw">import</span> Path
+
+<span class="dc">@app.get</span>(<span class="st">"/employees/{employee_id}"</span>)
+<span class="kw">def</span> <span class="fn">get_employee</span>(
+    employee_id: <span class="tp">int</span> = Path(<span class="pr">gt</span>=<span class="nm">0</span>, <span class="pr">description</span>=<span class="st">"Must be positive integer"</span>)
+):
+    <span class="kw">return</span> {<span class="st">"id"</span>: employee_id}</pre>
+        </div>
+      </div>
+      <div class="section-nav">
+        <button class="nav-btn" onclick="show(4)">← GET Employees</button>
+        <div style="text-align:center">
+          <div class="progress-bar"><div class="progress-fill" style="width:37%"></div></div>
+          <div class="progress-label">6 / 16</div>
+        </div>
+        <button class="nav-btn primary" onclick="show(6)">Next: Errors →</button>
+      </div>
+    </div>
+
+    <!-- SECTION 6: Errors -->
+    <div class="section" id="s6">
+      <div class="section-header">
+        <span class="tag">Chapter 07</span>
+        <h2>Raising Errors & Status Codes</h2>
+        <p>Return meaningful HTTP error responses when something goes wrong — like when an employee doesn't exist.</p>
+      </div>
+      <div class="prose">
+        <h3>HTTPException</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-file">main.py</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI, HTTPException, status
+
+<span class="dc">@app.get</span>(<span class="st">"/employees/{employee_id}"</span>)
+<span class="kw">def</span> <span class="fn">get_employee</span>(employee_id: <span class="tp">int</span>):
+    employee = <span class="fn">next</span>(
+        (e <span class="kw">for</span> e <span class="kw">in</span> fake_employees <span class="kw">if</span> e[<span class="st">"id"</span>] == employee_id),
+        <span class="kw">None</span>
+    )
+    
+    <span class="kw">if not</span> employee:
+        <span class="kw">raise</span> HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=<span class="fn">f</span><span class="st">"Employee with id {employee_id} not found"</span>
+        )
+    
+    <span class="kw">return</span> employee</pre>
+        </div>
+
+        <h3>Common HTTP Status Codes</h3>
+        <table class="schema-table">
+          <thead><tr><th>Code</th><th>Constant</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td class="field-name">200</td><td class="field-type">HTTP_200_OK</td><td class="endpoint-desc">Success (default GET)</td></tr>
+            <tr><td class="field-name">201</td><td class="field-type">HTTP_201_CREATED</td><td class="endpoint-desc">Resource created (POST)</td></tr>
+            <tr><td class="field-name">204</td><td class="field-type">HTTP_204_NO_CONTENT</td><td class="endpoint-desc">Success, no body (DELETE)</td></tr>
+            <tr><td class="field-name">400</td><td class="field-type">HTTP_400_BAD_REQUEST</td><td class="endpoint-desc">Client sent bad data</td></tr>
+            <tr><td class="field-name">401</td><td class="field-type">HTTP_401_UNAUTHORIZED</td><td class="endpoint-desc">Not authenticated</td></tr>
+            <tr><td class="field-name">403</td><td class="field-type">HTTP_403_FORBIDDEN</td><td class="endpoint-desc">Not authorized</td></tr>
+            <tr><td class="field-name">404</td><td class="field-type">HTTP_404_NOT_FOUND</td><td class="endpoint-desc">Resource doesn't exist</td></tr>
+            <tr><td class="field-name">422</td><td class="field-type">HTTP_422_UNPROCESSABLE</td><td class="endpoint-desc">Validation failed (auto)</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Set Status Code on Successful Routes</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="cm"># Return 201 when creating a resource</span>
+<span class="dc">@app.post</span>(<span class="st">"/employees"</span>, status_code=status.HTTP_201_CREATED)
+<span class="kw">def</span> <span class="fn">create_employee</span>():
+    <span class="kw">pass</span>
+
+<span class="cm"># Return 204 No Content when deleting</span>
+<span class="dc">@app.delete</span>(<span class="st">"/employees/{id}"</span>, status_code=status.HTTP_204_NO_CONTENT)
+<span class="kw">def</span> <span class="fn">delete_employee</span>(id: <span class="tp">int</span>):
+    <span class="kw">pass</span></pre>
+        </div>
+      </div>
+      <div class="section-nav">
+        <button class="nav-btn" onclick="show(5)">← Path Parameters</button>
+        <div style="text-align:center">
+          <div class="progress-bar"><div class="progress-fill" style="width:44%"></div></div>
+          <div class="progress-label">7 / 16</div>
+        </div>
+        <button class="nav-btn primary" onclick="show(7)">Next: Query Params →</button>
+      </div>
+    </div>
+
+    <!-- SECTION 7: Query Params -->
+    <div class="section" id="s7">
+      <div class="section-header">
+        <span class="tag">Chapter 08</span>
+        <h2>Query Parameters</h2>
+        <p>Accept optional filtering and search parameters via the URL query string — like <code>?role=Engineer&limit=10</code>.</p>
+      </div>
+      <div class="prose">
+        <h3>Basic Query Parameters</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-file">main.py</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="cm"># Any function parameter NOT in the URL path = query parameter</span>
+<span class="dc">@app.get</span>(<span class="st">"/employees"</span>)
+<span class="kw">def</span> <span class="fn">get_employees</span>(
+    skip: <span class="tp">int</span> = <span class="nm">0</span>,          <span class="cm"># ?skip=10  (default: 0)</span>
+    limit: <span class="tp">int</span> = <span class="nm">10</span>,        <span class="cm"># ?limit=5  (default: 10)</span>
+    role: <span class="tp">str</span> | <span class="kw">None</span> = <span class="kw">None</span>  <span class="cm"># ?role=Engineer  (optional)</span>
+):
+    results = fake_employees[skip : skip + limit]
+    
+    <span class="kw">if</span> role:
+        results = [e <span class="kw">for</span> e <span class="kw">in</span> results <span class="kw">if</span> e[<span class="st">"role"</span>] == role]
+    
+    <span class="kw">return</span> results</pre>
+        </div>
+
+        <h3>How to Call These Endpoints</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">bash</span></div>
+          <pre><span class="cm"># Get first 5 employees</span>
+GET /employees?limit=5
+
+<span class="cm"># Skip first 10, get next 5</span>
+GET /employees?skip=10&limit=5
+
+<span class="cm"># Filter by role</span>
+GET /employees?role=Engineer
+
+<span class="cm"># Combine everything</span>
+GET /employees?skip=0&limit=20&role=Manager</pre>
+        </div>
+
+        <h3>Query Parameter Validation</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="kw">from</span> fastapi <span class="kw">import</span> Query
+
+<span class="dc">@app.get</span>(<span class="st">"/employees"</span>)
+<span class="kw">def</span> <span class="fn">get_employees</span>(
+    limit: <span class="tp">int</span> = Query(<span class="pr">default</span>=<span class="nm">10</span>, <span class="pr">ge</span>=<span class="nm">1</span>, <span class="pr">le</span>=<span class="nm">100</span>),
+    role: <span class="tp">str</span> | <span class="kw">None</span> = Query(<span class="kw">None</span>, <span class="pr">min_length</span>=<span class="nm">3</span>)
+):
+    <span class="kw">return</span> fake_employees[:limit]</pre>
+        </div>
+
+        <div class="callout tip">
+          <span class="callout-icon">💡</span>
+          <div><code>ge=1</code> means "greater than or equal to 1" · <code>le=100</code> means "less than or equal to 100". FastAPI validates these and returns 422 automatically if violated.</div>
+        </div>
+      </div>
+      <div class="section-nav">
+        <button class="nav-btn" onclick="show(6)">← Errors</button>
+        <div style="text-align:center">
+          <div class="progress-bar"><div class="progress-fill" style="width:50%"></div></div>
+          <div class="progress-label">8 / 16</div>
+        </div>
+        <button class="nav-btn primary" onclick="show(8)">Next: POST Requests →</button>
+      </div>
+    </div>
+
+    <!-- SECTION 8: Request Body -->
+    <div class="section" id="s8">
+      <div class="section-header">
+        <span class="tag">Chapter 09</span>
+        <h2>Request Body & POST</h2>
+        <p>Accept structured JSON data from the client to create new employee records using Pydantic models.</p>
+      </div>
+      <div class="prose">
+        <h3>Define the Input Schema</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-file">schemas.py</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="kw">from</span> pydantic <span class="kw">import</span> BaseModel, EmailStr, Field
+<span class="kw">from</span> typing <span class="kw">import</span> Optional
+
+<span class="cm"># Pydantic model = the shape of data we EXPECT from the client</span>
+<span class="kw">class</span> <span class="tp">EmployeeCreate</span>(BaseModel):
+    name: <span class="tp">str</span> = Field(<span class="pr">min_length</span>=<span class="nm">2</span>, <span class="pr">max_length</span>=<span class="nm">100</span>)
+    email: <span class="tp">EmailStr</span>
+    role: <span class="tp">str</span>
+    salary: <span class="tp">float</span> = Field(<span class="pr">gt</span>=<span class="nm">0</span>)
+    department: Optional[<span class="tp">str</span>] = <span class="kw">None</span>
+
+<span class="cm"># Example valid JSON body:</span>
+<span class="cm"># {</span>
+<span class="cm">#   "name": "Alice Johnson",</span>
+<span class="cm">#   "email": "alice@company.com",</span>
+<span class="cm">#   "role": "Engineer",</span>
+<span class="cm">#   "salary": 75000.00</span>
+<span class="cm"># }</span></pre>
+        </div>
+
+        <h3>Use It in a POST Route</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-file">main.py</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI, status
+<span class="kw">from</span> schemas <span class="kw">import</span> EmployeeCreate
+
+<span class="dc">@app.post</span>(<span class="st">"/employees"</span>, status_code=status.HTTP_201_CREATED)
+<span class="kw">def</span> <span class="fn">create_employee</span>(employee: EmployeeCreate):
+    <span class="cm"># FastAPI automatically:</span>
+    <span class="cm"># 1. Reads the JSON request body</span>
+    <span class="cm"># 2. Validates it against EmployeeCreate</span>
+    <span class="cm"># 3. Returns 422 if validation fails</span>
+    <span class="cm"># 4. Passes a validated object to your function</span>
+    
+    new_employee = employee.model_dump()
+    new_employee[<span class="st">"id"</span>] = <span class="fn">len</span>(fake_employees) + <span class="nm">1</span>
+    fake_employees.append(new_employee)
+    
+    <span class="kw">return</span> new_employee</pre>
+        </div>
+
+        <div class="callout warn">
+          <span class="callout-icon">⚠️</span>
+          <div>In this example data is stored in memory only. Once the server restarts, it's gone. That's why we add a real database in the next chapters.</div>
+        </div>
+      </div>
+      <div class="section-nav">
+        <button class="nav-btn" onclick="show(7)">← Query Params</button>
+        <div style="text-align:center">
+          <div class="progress-bar"><div class="progress-fill" style="width:56%"></div></div>
+          <div class="progress-label">9 / 16</div>
+        </div>
+        <button class="nav-btn primary" onclick="show(9)">Next: Pydantic Output →</button>
+      </div>
+    </div>
+
+    <!-- SECTION 9: Pydantic -->
+    <div class="section" id="s9">
+      <div class="section-header">
+        <span class="tag">Chapter 10</span>
+        <h2>Output Type & Pydantic Models</h2>
+        <p>Control exactly what data is returned by defining output schemas — hide sensitive fields like passwords automatically.</p>
+      </div>
+      <div class="prose">
+        <h3>Input vs Output Schemas</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-file">schemas.py</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="kw">from</span> pydantic <span class="kw">import</span> BaseModel, EmailStr
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+
+<span class="cm"># INPUT: What the client sends (includes password)</span>
+<span class="kw">class</span> <span class="tp">EmployeeCreate</span>(BaseModel):
+    name: <span class="tp">str</span>
+    email: <span class="tp">EmailStr</span>
+    role: <span class="tp">str</span>
+    salary: <span class="tp">float</span>
+    password: <span class="tp">str</span>   <span class="cm"># Accept password in creation</span>
+
+<span class="cm"># OUTPUT: What we return (NEVER return the password!)</span>
+<span class="kw">class</span> <span class="tp">EmployeeOut</span>(BaseModel):
+    id: <span class="tp">int</span>
+    name: <span class="tp">str</span>
+    email: <span class="tp">EmailStr</span>
+    role: <span class="tp">str</span>
+    salary: <span class="tp">float</span>
+    created_at: <span class="tp">datetime</span>
+    
+    <span class="cm"># Needed in Pydantic v2 to work with SQLAlchemy models</span>
+    model_config = {<span class="st">"from_attributes"</span>: <span class="kw">True</span>}</pre>
+        </div>
+
+        <h3>Use response_model on the Route</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-file">main.py</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="kw">from</span> schemas <span class="kw">import</span> EmployeeCreate, EmployeeOut
+
+<span class="cm"># response_model filters the output to only EmployeeOut fields</span>
+<span class="dc">@app.post</span>(<span class="st">"/employees"</span>, response_model=<span class="tp">EmployeeOut</span>, status_code=<span class="nm">201</span>)
+<span class="kw">def</span> <span class="fn">create_employee</span>(employee: <span class="tp">EmployeeCreate</span>):
+    <span class="cm"># Even if the DB object has a "hashed_password" field,</span>
+    <span class="cm"># it will NOT appear in the response!</span>
+    <span class="kw">return</span> new_employee_from_db
+
+<span class="cm"># List response</span>
+<span class="dc">@app.get</span>(<span class="st">"/employees"</span>, response_model=<span class="tp">list</span>[<span class="tp">EmployeeOut</span>])
+<span class="kw">def</span> <span class="fn">get_employees</span>():
+    <span class="kw">return</span> all_employees</pre>
+        </div>
+
+        <div class="callout tip">
+          <span class="callout-icon">💡</span>
+          <div><code>response_model</code> is security-critical. It ensures that even if your internal objects have sensitive fields, they're stripped before the response is sent to the client.</div>
+        </div>
+      </div>
+      <div class="section-nav">
+        <button class="nav-btn" onclick="show(8)">← Request Body</button>
+        <div style="text-align:center">
+          <div class="progress-bar"><div class="progress-fill" style="width:62%"></div></div>
+          <div class="progress-label">10 / 16</div>
+        </div>
+        <button class="nav-btn primary" onclick="show(10)">Next: Database →</button>
+      </div>
+    </div>
+
+    <!-- SECTION 10: Database -->
+    <div class="section" id="s10">
+      <div class="section-header">
+        <span class="tag">Chapter 11</span>
+        <h2>Database Connection</h2>
+        <p>Connect FastAPI to a SQLite database using SQLAlchemy ORM and set up dependency injection for sessions.</p>
+      </div>
+      <div class="prose">
+        <h3>Database Setup</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-file">database.py</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="kw">from</span> sqlalchemy <span class="kw">import</span> create_engine
+<span class="kw">from</span> sqlalchemy.ext.declarative <span class="kw">import</span> declarative_base
+<span class="kw">from</span> sqlalchemy.orm <span class="kw">import</span> sessionmaker
+
+<span class="cm"># SQLite URL — the file will be created automatically</span>
+SQLALCHEMY_DATABASE_URL = <span class="st">"sqlite:///./employees.db"</span>
+<span class="cm"># For PostgreSQL: "postgresql://user:pass@localhost/dbname"</span>
+
+<span class="cm"># Engine = the connection to the database</span>
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={<span class="st">"check_same_thread"</span>: <span class="kw">False</span>}  <span class="cm"># SQLite only</span>
+)
+
+<span class="cm"># SessionLocal = a factory for database sessions</span>
+SessionLocal = sessionmaker(autocommit=<span class="kw">False</span>, autoflush=<span class="kw">False</span>, bind=engine)
+
+<span class="cm"># Base class for all SQLAlchemy models</span>
+Base = declarative_base()
+
+<span class="cm"># Dependency: yields a DB session per request, always closes it</span>
+<span class="kw">def</span> <span class="fn">get_db</span>():
+    db = SessionLocal()
+    <span class="kw">try</span>:
+        <span class="kw">yield</span> db       <span class="cm"># &lt;-- request code runs here</span>
+    <span class="kw">finally</span>:
+        db.close()    <span class="cm"># &lt;-- always closes, even on errors</span></pre>
+        </div>
+
+        <h3>SQLAlchemy Model</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-file">models.py</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="kw">from</span> sqlalchemy <span class="kw">import</span> Column, Integer, String, Float, DateTime
+<span class="kw">from</span> sqlalchemy.sql <span class="kw">import</span> func
+<span class="kw">from</span> database <span class="kw">import</span> Base
+
+<span class="kw">class</span> <span class="tp">Employee</span>(Base):
+    __tablename__ = <span class="st">"employees"</span>
+
+    id         = Column(Integer, primary_key=<span class="kw">True</span>, index=<span class="kw">True</span>)
+    name       = Column(String, nullable=<span class="kw">False</span>)
+    email      = Column(String, unique=<span class="kw">True</span>, nullable=<span class="kw">False</span>)
+    role       = Column(String, nullable=<span class="kw">False</span>)
+    salary     = Column(Float, nullable=<span class="kw">False</span>)
+    hashed_pw  = Column(String, nullable=<span class="kw">False</span>)
+    created_at = Column(DateTime(timezone=<span class="kw">True</span>), server_default=func.now())</pre>
+        </div>
+
+        <h3>Create Tables in main.py</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-file">main.py</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre"><span class="kw">from</span> database <span class="kw">import</span> engine
+<span class="kw">import</span> models
+
+<span class="cm"># Creates all tables on startup (if they don't exist)</span>
+models.Base.metadata.create_all(bind=engine)</pre>
+        </div>
+      </div>
+      <div class="section-nav">
+        <button class="nav-btn" onclick="show(9)">← Pydantic Output</button>
+        <div style="text-align:center">
+          <div class="progress-bar"><div class="progress-fill" style="width:69%"></div></div>
+          <div class="progress-label">11 / 16</div>
+        </div>
+        <button class="nav-btn primary" onclick="show(11)">Next: Create Employees →</button>
+      </div>
+    </div>
+
+    <!-- SECTION 11: Create -->
+    <div class="section" id="s11">
+      <div class="section-header">
+        <span class="tag">Chapter 12</span>
+        <h2>Creating Employees & Saving to Database</h2>
+        <p>Wire the POST endpoint to the database using dependency injection and the SQLAlchemy session.</p>
+      </div>
+      <div class="prose">
+        <h3>The Full POST Endpoint</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-file">routers/employees.py</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="kw">from</span> fastapi <span class="kw">import</span> APIRouter, Depends, HTTPException, status
+<span class="kw">from</span> sqlalchemy.orm <span class="kw">import</span> Session
+<span class="kw">from</span> passlib.context <span class="kw">import</span> CryptContext
+
+<span class="kw">from</span> database <span class="kw">import</span> get_db
+<span class="kw">import</span> models, schemas
+
+router = APIRouter(prefix=<span class="st">"/employees"</span>, tags=[<span class="st">"Employees"</span>])
+pwd_context = CryptContext(schemes=[<span class="st">"bcrypt"</span>])
+
+<span class="dc">@router.post</span>(<span class="st">""</span>, response_model=schemas.EmployeeOut, status_code=status.HTTP_201_CREATED)
+<span class="kw">def</span> <span class="fn">create_employee</span>(
+    employee: schemas.EmployeeCreate,
+    db: Session = Depends(get_db)  <span class="cm"># ← FastAPI injects this!</span>
+):
+    <span class="cm"># Check if email already registered</span>
+    existing = db.query(models.Employee).filter(
+        models.Employee.email == employee.email
+    ).first()
+    <span class="kw">if</span> existing:
+        <span class="kw">raise</span> HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=<span class="st">"Email already registered"</span>
+        )
+    
+    <span class="cm"># Hash the password before storing</span>
+    hashed = pwd_context.hash(employee.password)
+    
+    <span class="cm"># Create SQLAlchemy model instance</span>
+    new_emp = models.Employee(
+        name=employee.name,
+        email=employee.email,
+        role=employee.role,
+        salary=employee.salary,
+        hashed_pw=hashed
+    )
+    
+    db.add(new_emp)      <span class="cm"># Stage the insert</span>
+    db.commit()          <span class="cm"># Write to DB</span>
+    db.refresh(new_emp)  <span class="cm"># Load the auto-generated ID</span>
+    
+    <span class="kw">return</span> new_emp</pre>
+        </div>
+
+        <div class="callout info">
+          <span class="callout-icon">ℹ️</span>
+          <div><code>Depends(get_db)</code> is <strong>dependency injection</strong>. FastAPI calls <code>get_db()</code> for each request, passes the session to your function, and handles cleanup automatically.</div>
+        </div>
+
+        <h3>Register the Router in main.py</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-file">main.py</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="kw">from</span> routers <span class="kw">import</span> employees
+
+app.include_router(employees.router)</pre>
+        </div>
+      </div>
+      <div class="section-nav">
+        <button class="nav-btn" onclick="show(10)">← DB Connection</button>
+        <div style="text-align:center">
+          <div class="progress-bar"><div class="progress-fill" style="width:75%"></div></div>
+          <div class="progress-label">12 / 16</div>
+        </div>
+        <button class="nav-btn primary" onclick="show(12)">Next: Retrieve Data →</button>
+      </div>
+    </div>
+
+    <!-- SECTION 12: Retrieve -->
+    <div class="section" id="s12">
+      <div class="section-header">
+        <span class="tag">Chapter 13</span>
+        <h2>Retrieving from Database</h2>
+        <p>Query the database for all employees or a single one using SQLAlchemy's query interface.</p>
+      </div>
+      <div class="prose">
+        <h3>GET All Employees from DB</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-file">routers/employees.py</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="dc">@router.get</span>(<span class="st">""</span>, response_model=<span class="tp">list</span>[schemas.EmployeeOut])
+<span class="kw">def</span> <span class="fn">get_all_employees</span>(
+    skip: <span class="tp">int</span> = <span class="nm">0</span>,
+    limit: <span class="tp">int</span> = <span class="nm">10</span>,
+    db: Session = Depends(get_db)
+):
+    employees = (
+        db.query(models.Employee)
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    <span class="kw">return</span> employees
+
+<span class="dc">@router.get</span>(<span class="st">"/{employee_id}"</span>, response_model=schemas.EmployeeOut)
+<span class="kw">def</span> <span class="fn">get_employee</span>(employee_id: <span class="tp">int</span>, db: Session = Depends(get_db)):
+    employee = db.query(models.Employee).filter(
+        models.Employee.id == employee_id
+    ).first()
+    
+    <span class="kw">if not</span> employee:
+        <span class="kw">raise</span> HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=<span class="fn">f</span><span class="st">"Employee {employee_id} not found"</span>
+        )
+    
+    <span class="kw">return</span> employee</pre>
+        </div>
+
+        <h3>SQLAlchemy Query Cheat Sheet</h3>
+        <table class="schema-table">
+          <thead><tr><th>Operation</th><th>Code</th></tr></thead>
+          <tbody>
+            <tr><td>Get all rows</td><td class="field-type">.all()</td></tr>
+            <tr><td>Get first row</td><td class="field-type">.first()</td></tr>
+            <tr><td>Filter by column</td><td class="field-type">.filter(Model.col == value)</td></tr>
+            <tr><td>Paginate</td><td class="field-type">.offset(skip).limit(n)</td></tr>
+            <tr><td>Count results</td><td class="field-type">.count()</td></tr>
+            <tr><td>Order by</td><td class="field-type">.order_by(Model.col.desc())</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="section-nav">
+        <button class="nav-btn" onclick="show(11)">← Create Employees</button>
+        <div style="text-align:center">
+          <div class="progress-bar"><div class="progress-fill" style="width:81%"></div></div>
+          <div class="progress-label">13 / 16</div>
+        </div>
+        <button class="nav-btn primary" onclick="show(13)">Next: Delete →</button>
+      </div>
+    </div>
+
+    <!-- SECTION 13: Delete -->
+    <div class="section" id="s13">
+      <div class="section-header">
+        <span class="tag">Chapter 14</span>
+        <h2>Deleting Employees</h2>
+        <p>Implement the DELETE endpoint to remove employees from the database permanently.</p>
+      </div>
+      <div class="prose">
+        <h3>DELETE Endpoint</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-file">routers/employees.py</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="kw">from</span> fastapi <span class="kw">import</span> Response
+
+<span class="dc">@router.delete</span>(<span class="st">"/{employee_id}"</span>, status_code=status.HTTP_204_NO_CONTENT)
+<span class="kw">def</span> <span class="fn">delete_employee</span>(employee_id: <span class="tp">int</span>, db: Session = Depends(get_db)):
+    <span class="cm"># 1. Find the employee</span>
+    employee = db.query(models.Employee).filter(
+        models.Employee.id == employee_id
+    ).first()
+    
+    <span class="cm"># 2. Raise 404 if not found</span>
+    <span class="kw">if not</span> employee:
+        <span class="kw">raise</span> HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=<span class="fn">f</span><span class="st">"Employee {employee_id} not found"</span>
+        )
+    
+    <span class="cm"># 3. Delete and commit</span>
+    db.delete(employee)
+    db.commit()
+    
+    <span class="cm"># 4. 204 No Content = success, no body returned</span>
+    <span class="kw">return</span> Response(status_code=status.HTTP_204_NO_CONTENT)</pre>
+        </div>
+
+        <div class="callout warn">
+          <span class="callout-icon">⚠️</span>
+          <div>Always protect DELETE endpoints with authentication (covered next). Without protection, anyone can delete any employee!</div>
+        </div>
+
+        <h3>Test the Delete</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">bash</span></div>
+          <pre><span class="cm"># Delete employee with ID 3</span>
+curl -X DELETE http://localhost:8000/employees/3
+
+<span class="cm"># Response: 204 No Content (empty body)</span>
+
+<span class="cm"># Try to get them again — 404!</span>
+curl http://localhost:8000/employees/3
+<span class="cm"># {"detail": "Employee 3 not found"}</span></pre>
+        </div>
+      </div>
+      <div class="section-nav">
+        <button class="nav-btn" onclick="show(12)">← Retrieve Data</button>
+        <div style="text-align:center">
+          <div class="progress-bar"><div class="progress-fill" style="width:87%"></div></div>
+          <div class="progress-label">14 / 16</div>
+        </div>
+        <button class="nav-btn primary" onclick="show(14)">Next: JWT Auth →</button>
+      </div>
+    </div>
+
+    <!-- SECTION 14: JWT -->
+    <div class="section" id="s14">
+      <div class="section-header">
+        <span class="tag">Chapter 15</span>
+        <h2>User Authentication & JWT Tokens</h2>
+        <p>Build a login endpoint that verifies credentials and issues a signed JWT access token.</p>
+      </div>
+      <div class="prose">
+        <h3>Token Config & Utilities</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-file">routers/auth.py</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre"><span class="kw">from</span> fastapi <span class="kw">import</span> APIRouter, Depends, HTTPException, status
+<span class="kw">from</span> fastapi.security <span class="kw">import</span> OAuth2PasswordRequestForm
+<span class="kw">from</span> jose <span class="kw">import</span> jwt
+<span class="kw">from</span> passlib.context <span class="kw">import</span> CryptContext
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, timedelta
+<span class="kw">from</span> sqlalchemy.orm <span class="kw">import</span> Session
+
+<span class="kw">from</span> database <span class="kw">import</span> get_db
+<span class="kw">import</span> models
+
+router = APIRouter(prefix=<span class="st">"/auth"</span>, tags=[<span class="st">"Authentication"</span>])
+pwd_context = CryptContext(schemes=[<span class="st">"bcrypt"</span>])
+
+<span class="cm"># 🔐 Keep this SECRET and in environment variables in production!</span>
+SECRET_KEY = <span class="st">"your-super-secret-key-change-in-production"</span>
+ALGORITHM = <span class="st">"HS256"</span>
+TOKEN_EXPIRE_MINUTES = <span class="nm">30</span>
+
+<span class="kw">def</span> <span class="fn">create_access_token</span>(data: <span class="tp">dict</span>):
+    payload = data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=TOKEN_EXPIRE_MINUTES)
+    payload.update({<span class="st">"exp"</span>: expire})
+    <span class="kw">return</span> jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+<span class="cm"># Login endpoint</span>
+<span class="dc">@router.post</span>(<span class="st">"/login"</span>)
+<span class="kw">def</span> <span class="fn">login</span>(
+    form: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
+    <span class="cm"># Find user by email (username field used for email)</span>
+    user = db.query(models.Employee).filter(
+        models.Employee.email == form.username
+    ).first()
+    
+    <span class="cm"># Verify password</span>
+    <span class="kw">if not</span> user <span class="kw">or not</span> pwd_context.verify(form.password, user.hashed_pw):
+        <span class="kw">raise</span> HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=<span class="st">"Invalid credentials"</span>,
+            headers={<span class="st">"WWW-Authenticate"</span>: <span class="st">"Bearer"</span>}
+        )
+    
+    <span class="cm"># Issue JWT token</span>
+    token = create_access_token({<span class="st">"sub"</span>: user.email, <span class="st">"id"</span>: user.id})
+    
+    <span class="kw">return</span> {<span class="st">"access_token"</span>: token, <span class="st">"token_type"</span>: <span class="st">"bearer"</span>}</pre>
+        </div>
+
+        <div class="callout info">
+          <span class="callout-icon">ℹ️</span>
+          <div><strong>JWT Structure:</strong> A token is 3 base64 parts: <code>header.payload.signature</code>. The payload contains the user's ID/email. The signature verifies it wasn't tampered with.</div>
+        </div>
+      </div>
+      <div class="section-nav">
+        <button class="nav-btn" onclick="show(13)">← Delete</button>
+        <div style="text-align:center">
+          <div class="progress-bar"><div class="progress-fill" style="width:94%"></div></div>
+          <div class="progress-label">15 / 16</div>
+        </div>
+        <button class="nav-btn primary" onclick="show(15)">Next: Protect Endpoints →</button>
+      </div>
+    </div>
+
+    <!-- SECTION 15: Protect -->
+    <div class="section" id="s15">
+      <div class="section-header">
+        <span class="tag">Chapter 16</span>
+        <h2>Protecting Endpoints</h2>
+        <p>Verify the JWT token on every protected request using a reusable dependency function.</p>
+      </div>
+      <div class="prose">
+        <h3>Current User Dependency</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-file">routers/auth.py</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="kw">from</span> fastapi.security <span class="kw">import</span> OAuth2PasswordBearer
+<span class="kw">from</span> jose <span class="kw">import</span> jwt, JWTError
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=<span class="st">"auth/login"</span>)
+
+<span class="kw">def</span> <span class="fn">get_current_user</span>(
+    token: <span class="tp">str</span> = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail=<span class="st">"Could not validate credentials"</span>,
+        headers={<span class="st">"WWW-Authenticate"</span>: <span class="st">"Bearer"</span>}
+    )
+    
+    <span class="kw">try</span>:
+        <span class="cm"># Decode and verify the JWT</span>
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: <span class="tp">str</span> = payload.get(<span class="st">"sub"</span>)
+        
+        <span class="kw">if</span> email <span class="kw">is None</span>:
+            <span class="kw">raise</span> credentials_exception
+            
+    <span class="kw">except</span> JWTError:
+        <span class="kw">raise</span> credentials_exception
+    
+    <span class="cm"># Look up the user in DB</span>
+    user = db.query(models.Employee).filter(
+        models.Employee.email == email
+    ).first()
+    
+    <span class="kw">if</span> user <span class="kw">is None</span>:
+        <span class="kw">raise</span> credentials_exception
+    
+    <span class="kw">return</span> user</pre>
+        </div>
+
+        <h3>Apply to Protected Routes</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-file">routers/employees.py</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="kw">from</span> routers.auth <span class="kw">import</span> get_current_user
+
+<span class="cm"># 🔒 Only authenticated users can delete employees</span>
+<span class="dc">@router.delete</span>(<span class="st">"/{employee_id}"</span>, status_code=<span class="nm">204</span>)
+<span class="kw">def</span> <span class="fn">delete_employee</span>(
+    employee_id: <span class="tp">int</span>,
+    db: Session = Depends(get_db),
+    current_user: models.Employee = Depends(get_current_user)  <span class="cm"># 🔒</span>
+):
+    <span class="kw">if</span> current_user.id != employee_id:
+        <span class="kw">raise</span> HTTPException(status_code=<span class="nm">403</span>, detail=<span class="st">"Not authorized"</span>)
+    
+    employee = db.query(models.Employee).filter(
+        models.Employee.id == employee_id
+    ).first()
+    db.delete(employee)
+    db.commit()</pre>
+        </div>
+
+        <h3>Test with Token</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><span class="cm"># 1. Login to get a token</span>
+curl -X POST http://localhost:8000/auth/login \
+  -d "username=alice@company.com&password=secret123"
+
+<span class="cm"># Response: {"access_token": "eyJhbGci...", "token_type": "bearer"}</span>
+
+<span class="cm"># 2. Use token on protected endpoint</span>
+curl -X DELETE http://localhost:8000/employees/1 \
+  -H "Authorization: Bearer eyJhbGci..."</pre>
+        </div>
+
+        <div class="callout tip">
+          <span class="callout-icon">🎉</span>
+          <div><strong>You've built a complete REST API!</strong> You now have: full CRUD, database persistence, password hashing, JWT authentication, and protected endpoints. The Swagger UI at <code>/docs</code> even lets you log in and test authenticated routes.</div>
+        </div>
+
+        <h3>Next Steps</h3>
+        <ul>
+          <li>Switch to <strong>PostgreSQL</strong> for production (just change the DB URL)</li>
+          <li>Add <strong>Alembic</strong> for database migrations</li>
+          <li>Use <strong>environment variables</strong> for secrets (python-dotenv)</li>
+          <li>Add <strong>role-based access control</strong> (admin vs employee)</li>
+          <li>Deploy on <strong>Docker + Railway / Render</strong></li>
+        </ul>
+      </div>
+      <div class="section-nav">
+        <button class="nav-btn" onclick="show(14)">← JWT Auth</button>
+        <div style="text-align:center">
+          <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+          <div class="progress-label">16 / 16 ✓</div>
+        </div>
+        <button class="nav-btn primary" onclick="show(0)">↑ Back to Top</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+let current = 0;
+const total = 16;
+
+function show(idx) {
+  document.getElementById('s' + current).classList.remove('active');
+  document.getElementById('n' + current).classList.remove('active');
+  current = idx;
+  document.getElementById('s' + current).classList.add('active');
+  document.getElementById('n' + current).classList.add('active');
+  document.querySelector('main').scrollTop = 0;
+}
+
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  const text = pre.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+</script>
+</body>
+</html>
