@@ -1,0 +1,1909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FastAPI Auth Microservice — Complete Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:wght@700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0f1923;
+  --ink2: #1e2d3d;
+  --muted: #4a5568;
+  --dim: #8898aa;
+  --rule: #c9d4df;
+  --rule2: #e2e8f0;
+  --paper: #f7f5f0;
+  --paper2: #eeeae2;
+  --white: #ffffff;
+  --accent: #7c3aed;
+  --accent2: #2563eb;
+  --accent3: #059669;
+  --gold: #b7791f;
+  --grid: rgba(15,25,35,0.04);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  font-family: 'Source Serif 4', Georgia, serif;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* ── MASTHEAD ── */
+.masthead {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+.masthead::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: repeating-linear-gradient(90deg, var(--accent) 0, var(--accent) 40px, transparent 40px, transparent 48px);
+}
+.masthead-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 3.5rem 2.5rem 2.5rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2rem;
+  align-items: end;
+}
+.masthead-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.masthead-label::before {
+  content: '';
+  display: inline-block;
+  width: 24px;
+  height: 1px;
+  background: var(--accent);
+}
+.masthead h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -.02em;
+  color: var(--white);
+  margin-bottom: .6rem;
+}
+.masthead h1 em { font-style: italic; color: var(--accent); }
+.masthead-sub {
+  font-size: 1rem;
+  font-weight: 300;
+  color: #8899aa;
+  line-height: 1.6;
+  max-width: 520px;
+  font-style: italic;
+}
+.masthead-meta {
+  text-align: right;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--dim);
+  line-height: 1.9;
+}
+.masthead-meta strong { color: var(--paper); font-weight: 500; }
+.chapter-strip {
+  background: var(--ink2);
+  border-top: 1px solid rgba(255,255,255,.06);
+  padding: .7rem 2.5rem;
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+}
+.chapter-strip::-webkit-scrollbar { display: none; }
+.ch-pill {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .06em;
+  padding: .3rem .9rem;
+  color: #566b82;
+  cursor: pointer;
+  white-space: nowrap;
+  border-right: 1px solid rgba(255,255,255,.06);
+  transition: color .2s, background .2s;
+}
+.ch-pill:hover { color: var(--paper); }
+.ch-pill.active { color: var(--accent); background: rgba(124,58,237,.1); }
+
+/* ── LAYOUT ── */
+.layout {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: calc(100vh - 220px);
+}
+
+/* ── SIDEBAR ── */
+aside {
+  border-right: 1px solid var(--rule);
+  background: rgba(255,255,255,.6);
+  padding: 1.8rem 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+aside::-webkit-scrollbar { width: 2px; }
+aside::-webkit-scrollbar-thumb { background: var(--rule); }
+.aside-section { margin-bottom: .3rem; }
+.aside-section-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--dim);
+  padding: .8rem 1.4rem .3rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.aside-section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rule2);
+}
+.aside-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: .48rem 1.4rem;
+  font-size: 12.5px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .15s;
+  border-left: 2px solid transparent;
+  line-height: 1.45;
+}
+.aside-item:hover { color: var(--ink); background: rgba(0,0,0,.03); }
+.aside-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(124,58,237,.04); font-weight: 600; }
+.aside-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9.5px;
+  color: var(--rule);
+  min-width: 20px;
+  margin-top: 1px;
+}
+.aside-item.active .aside-num { color: rgba(124,58,237,.4); }
+
+/* ── MAIN ── */
+main {
+  padding: 2.5rem 3rem;
+  overflow-y: auto;
+  background: transparent;
+}
+main::-webkit-scrollbar { width: 4px; }
+main::-webkit-scrollbar-thumb { background: var(--rule); }
+.section { display: none; }
+.section.active { display: block; }
+
+/* ── SECTION HEADER ── */
+.sec-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: .6rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sec-eyebrow::before {
+  content: '';
+  width: 16px;
+  height: 2px;
+  background: var(--accent);
+  display: inline-block;
+}
+.sec-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.15;
+  margin-bottom: .6rem;
+}
+.sec-lead {
+  font-size: 1rem;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--muted);
+  line-height: 1.8;
+  max-width: 620px;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--rule2);
+}
+
+/* ── PROSE ── */
+.prose { max-width: 740px; }
+.prose h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 2rem 0 .6rem;
+  padding-bottom: .3rem;
+  border-bottom: 1px solid var(--rule2);
+}
+.prose h4 {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--accent2);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin: 1.4rem 0 .5rem;
+}
+.prose p {
+  font-size: .96rem;
+  color: var(--muted);
+  line-height: 1.9;
+  margin-bottom: .85rem;
+}
+.prose strong { color: var(--ink); font-weight: 600; }
+.prose ul { list-style: none; margin: .6rem 0 1rem; }
+.prose ul li {
+  font-size: .93rem;
+  color: var(--muted);
+  line-height: 1.75;
+  padding: .2rem 0 .2rem 1.4rem;
+  position: relative;
+}
+.prose ul li::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: var(--rule);
+  font-weight: 300;
+}
+code {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .82em;
+  background: var(--paper2);
+  border: 1px solid var(--rule2);
+  border-radius: 3px;
+  padding: 1px 5px;
+  color: var(--accent2);
+}
+
+/* ── CODE BLOCKS ── */
+.code-block {
+  background: var(--ink);
+  border-radius: 6px;
+  margin: 1.2rem 0;
+  overflow: hidden;
+  font-family: 'IBM Plex Mono', monospace;
+  border: 1px solid rgba(255,255,255,.06);
+}
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .55rem 1rem;
+  background: rgba(255,255,255,.04);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.code-dots { display: flex; gap: 5px; }
+.code-dots span { width: 9px; height: 9px; border-radius: 50%; }
+.code-dots span:nth-child(1) { background: #ef4444; }
+.code-dots span:nth-child(2) { background: #f59e0b; }
+.code-dots span:nth-child(3) { background: #22c55e; }
+.code-meta { display: flex; align-items: center; gap: 12px; }
+.code-file { font-size: 11px; color: #94a3b8; }
+.copy-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 4px;
+  padding: 2px 9px;
+  font-size: 10px;
+  color: #64748b;
+  cursor: pointer;
+  transition: all .2s;
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: .04em;
+}
+.copy-btn:hover { color: #e2e8f0; border-color: rgba(255,255,255,.25); }
+.copy-btn.ok { color: #4ade80; border-color: rgba(74,222,128,.3); }
+pre {
+  padding: 1.2rem 1rem;
+  overflow-x: auto;
+  font-size: 12.5px;
+  line-height: 1.75;
+  color: #cdd5e0;
+}
+pre::-webkit-scrollbar { height: 3px; }
+pre::-webkit-scrollbar-thumb { background: #2d3748; }
+
+/* Syntax */
+.kw { color: #f472b6; }
+.fn { color: #67e8f9; }
+.st { color: #86efac; }
+.cm { color: #475569; font-style: italic; }
+.tp { color: #fbbf24; }
+.dc { color: #a78bfa; }
+.nm { color: #fb923c; }
+.pr { color: #94a3b8; }
+
+/* ── CALLOUTS ── */
+.callout {
+  display: flex;
+  gap: 14px;
+  padding: 1rem 1.2rem;
+  margin: 1.2rem 0;
+  font-size: .9rem;
+  line-height: 1.75;
+  font-family: 'Source Serif 4', serif;
+  border-left: 3px solid;
+}
+.callout-mark {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  min-width: 52px;
+  padding-top: 2px;
+}
+.callout.note { background: rgba(37,99,235,.05); border-color: var(--accent2); color: #1e3a5f; }
+.callout.note .callout-mark { color: var(--accent2); }
+.callout.tip { background: rgba(5,150,105,.05); border-color: var(--accent3); color: #064e3b; }
+.callout.tip .callout-mark { color: var(--accent3); }
+.callout.warn { background: rgba(183,121,31,.06); border-color: var(--gold); color: #78350f; }
+.callout.warn .callout-mark { color: var(--gold); }
+.callout.critical { background: rgba(192,57,43,.05); border-color: #c0392b; color: #7f1d1d; }
+.callout.critical .callout-mark { color: #c0392b; }
+
+/* ── SERVICE CARDS ── */
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 1.2rem 0;
+}
+.service-card {
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 1rem 1.1rem;
+  position: relative;
+  overflow: hidden;
+}
+.service-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.service-card.blue::before { background: var(--accent2); }
+.service-card.red::before { background: #c0392b; }
+.service-card.green::before { background: var(--accent3); }
+.service-card.gold::before { background: var(--gold); }
+.service-card.purple::before { background: var(--accent); }
+.service-card.cyan::before { background: #0891b2; }
+.sc-port { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--dim); margin-bottom: .4rem; }
+.sc-name { font-family: 'IBM Plex Mono', monospace; font-size: .85rem; font-weight: 600; color: var(--ink); margin-bottom: .25rem; }
+.sc-desc { font-size: .8rem; color: var(--muted); line-height: 1.5; }
+
+/* ── ENDPOINT BADGES ── */
+.endpoint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: .55rem .8rem;
+  background: var(--white);
+  border: 1px solid var(--rule2);
+  border-radius: 5px;
+  margin: .5rem 0;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.method {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 3px;
+  min-width: 48px;
+  text-align: center;
+  letter-spacing: .04em;
+}
+.get { background: rgba(5,150,105,.1); color: #065f46; border: 1px solid rgba(5,150,105,.2); }
+.post { background: rgba(37,99,235,.1); color: #1e3a8a; border: 1px solid rgba(37,99,235,.2); }
+.put { background: rgba(183,121,31,.1); color: #78350f; border: 1px solid rgba(183,121,31,.2); }
+.del { background: rgba(192,57,43,.1); color: #7f1d1d; border: 1px solid rgba(192,57,43,.2); }
+.endpoint-path { font-size: .85rem; color: var(--ink2); flex: 1; }
+.endpoint-note { font-size: .78rem; color: var(--dim); }
+
+/* ── STEPS ── */
+.steps { margin: 1.2rem 0; }
+.step { display: flex; gap: 16px; }
+.step-l { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+.step-dot {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 1.5px solid var(--rule);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+  flex-shrink: 0;
+}
+.step-line { width: 1px; flex: 1; background: var(--rule2); margin: 4px 0; min-height: 18px; }
+.step-r { padding: 3px 0 1.4rem; flex: 1; }
+.step-t { font-size: .93rem; font-weight: 600; color: var(--ink); margin-bottom: .25rem; font-family: 'IBM Plex Mono', monospace; }
+.step-b { font-size: .88rem; color: var(--muted); line-height: 1.7; }
+
+/* ── TABLE ── */
+.ref-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .86rem;
+  margin: 1rem 0;
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.ref-table thead tr { background: var(--paper2); }
+.ref-table th {
+  padding: .55rem 1rem;
+  text-align: left;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--rule);
+}
+.ref-table td {
+  padding: .55rem 1rem;
+  color: var(--muted);
+  border-bottom: 1px solid var(--rule2);
+  vertical-align: top;
+}
+.ref-table tr:last-child td { border-bottom: none; }
+.ref-table .mono { font-family: 'IBM Plex Mono', monospace; font-size: .82rem; color: var(--ink2); }
+
+/* ── PROGRESS + NAV ── */
+.sec-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule2);
+  gap: 1rem;
+}
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  padding: .55rem 1.2rem;
+  font-size: .84rem;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .2s;
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: .02em;
+}
+.nav-btn:hover { color: var(--ink); border-color: var(--ink2); }
+.nav-btn.fwd { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.nav-btn.fwd:hover { background: var(--ink2); }
+.prog-wrap { text-align: center; }
+.prog-bar {
+  height: 2px;
+  width: 140px;
+  background: var(--rule2);
+  border-radius: 99px;
+  overflow: hidden;
+  margin: 0 auto 4px;
+}
+.prog-fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width .4s; }
+.prog-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--dim); }
+
+@media (max-width: 820px) {
+  .layout { grid-template-columns: 1fr; }
+  aside { display: none; }
+  main { padding: 1.5rem 1.2rem; }
+  .masthead-inner { grid-template-columns: 1fr; }
+  .masthead-meta { text-align: left; }
+}
+</style>
+</head>
+<body>
+
+<!-- MASTHEAD -->
+<header class="masthead">
+  <div class="masthead-inner">
+    <div>
+      <div class="masthead-label">Advanced Course · Security & Identity</div>
+      <h1>FastAPI <em>Auth</em><br>Microservice</h1>
+      <p class="masthead-sub">Build a production-grade authentication microservice: registration, login with JWT, token refresh, forgot-password via email, secure logout, and blacklisting — fully explained from first principles.</p>
+    </div>
+    <div class="masthead-meta">
+      <div><strong>12 Chapters</strong></div>
+      <div><strong>1 Dedicated Service</strong></div>
+      <div>Python 3.11+</div>
+      <div>FastAPI · PostgreSQL</div>
+      <div>Redis · JWT</div>
+      <div>SMTP / SendGrid</div>
+    </div>
+  </div>
+  <div class="chapter-strip" id="chStrip"></div>
+</header>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside>
+    <div class="aside-section">
+      <div class="aside-section-title">Foundations</div>
+      <div class="aside-item active" onclick="show(0)" id="n0"><span class="aside-num">01</span>Why a Dedicated Auth Service?</div>
+      <div class="aside-item" onclick="show(1)" id="n1"><span class="aside-num">02</span>Project Structure & Setup</div>
+      <div class="aside-item" onclick="show(2)" id="n2"><span class="aside-num">03</span>Database & Models</div>
+    </div>
+    <div class="aside-section">
+      <div class="aside-section-title">Core Auth Flows</div>
+      <div class="aside-item" onclick="show(3)" id="n3"><span class="aside-num">04</span>Registration & Password Hashing</div>
+      <div class="aside-item" onclick="show(4)" id="n4"><span class="aside-num">05</span>Login & JWT Issuance</div>
+      <div class="aside-item" onclick="show(5)" id="n5"><span class="aside-num">06</span>Token Refresh Strategy</div>
+      <div class="aside-item" onclick="show(6)" id="n6"><span class="aside-num">07</span>Logout & Token Blacklist</div>
+    </div>
+    <div class="aside-section">
+      <div class="aside-section-title">Password Recovery</div>
+      <div class="aside-item" onclick="show(7)" id="n7"><span class="aside-num">08</span>Forgot Password Flow</div>
+      <div class="aside-item" onclick="show(8)" id="n8"><span class="aside-num">09</span>Reset Password Endpoint</div>
+      <div class="aside-item" onclick="show(9)" id="n9"><span class="aside-num">10</span>Email Service (SMTP/SendGrid)</div>
+    </div>
+    <div class="aside-section">
+      <div class="aside-section-title">Production</div>
+      <div class="aside-item" onclick="show(10)" id="n10"><span class="aside-num">11</span>Security Best Practices</div>
+      <div class="aside-item" onclick="show(11)" id="n11"><span class="aside-num">12</span>Docker & Integration</div>
+    </div>
+  </aside>
+
+  <main>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S0: Why a Dedicated Auth Service -->
+    <!-- ════════════════════════════════ -->
+    <div class="section active" id="s0">
+      <div class="sec-eyebrow">Chapter 1 · Foundations</div>
+      <h1 class="sec-title">Why a Dedicated Auth Service?</h1>
+      <p class="sec-lead">Authentication is one of the most sensitive parts of any system. Isolating it in its own microservice is not over-engineering — it is the correct engineering decision for security, scalability, and team autonomy.</p>
+      <div class="prose">
+        <h3>The Core Idea</h3>
+        <p>In a microservices architecture, every service has one job. The Auth Service's job is to answer a single question: <strong>who are you, and are you allowed?</strong> It handles user identity — registration, credential validation, token issuance, and revocation — so that no other service ever has to touch a password or manage tokens.</p>
+        <p>Other services (orders, products, notifications) are then stateless with respect to identity: they simply trust the JWT the API Gateway has already validated.</p>
+
+        <h3>What This Service Covers</h3>
+        <div class="service-grid">
+          <div class="service-card purple">
+            <div class="sc-port">POST /auth/register</div>
+            <div class="sc-name">Registration</div>
+            <div class="sc-desc">Create an account, hash the password, send a verification email.</div>
+          </div>
+          <div class="service-card blue">
+            <div class="sc-port">POST /auth/login</div>
+            <div class="sc-name">Login</div>
+            <div class="sc-desc">Validate credentials, return access + refresh JWT pair.</div>
+          </div>
+          <div class="service-card cyan">
+            <div class="sc-port">POST /auth/refresh</div>
+            <div class="sc-name">Token Refresh</div>
+            <div class="sc-desc">Exchange a valid refresh token for a new access token.</div>
+          </div>
+          <div class="service-card red">
+            <div class="sc-port">POST /auth/logout</div>
+            <div class="sc-name">Logout</div>
+            <div class="sc-desc">Blacklist the current tokens in Redis so they are immediately invalid.</div>
+          </div>
+          <div class="service-card gold">
+            <div class="sc-port">POST /auth/forgot-password</div>
+            <div class="sc-name">Forgot Password</div>
+            <div class="sc-desc">Generate a secure reset token and send it by email.</div>
+          </div>
+          <div class="service-card green">
+            <div class="sc-port">POST /auth/reset-password</div>
+            <div class="sc-name">Reset Password</div>
+            <div class="sc-desc">Validate the reset token, update the password hash.</div>
+          </div>
+        </div>
+
+        <h3>JWT: Access vs Refresh Tokens</h3>
+        <p>This service issues a <strong>two-token strategy</strong>, which is the industry standard:</p>
+        <table class="ref-table">
+          <thead><tr><th>Token</th><th>Lifetime</th><th>Stored where?</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">access_token</td><td>15–30 min</td><td>Memory / Authorization header</td><td>Prove identity on every API call</td></tr>
+            <tr><td class="mono">refresh_token</td><td>7–30 days</td><td>HttpOnly cookie or secure storage</td><td>Get a new access token without re-login</td></tr>
+          </tbody>
+        </table>
+        <div class="callout note">
+          <span class="callout-mark">Why?</span>
+          <div>Short-lived access tokens limit the damage if a token is stolen — it expires quickly. Long-lived refresh tokens only travel to the auth service on refresh, reducing their exposure. This is the OAuth2 / OIDC standard pattern.</div>
+        </div>
+
+        <h3>All Endpoints at a Glance</h3>
+        <div class="endpoint"><span class="method post">POST</span><span class="endpoint-path">/auth/register</span><span class="endpoint-note">Create user account</span></div>
+        <div class="endpoint"><span class="method post">POST</span><span class="endpoint-path">/auth/login</span><span class="endpoint-note">Returns access + refresh token</span></div>
+        <div class="endpoint"><span class="method post">POST</span><span class="endpoint-path">/auth/refresh</span><span class="endpoint-note">Rotate tokens</span></div>
+        <div class="endpoint"><span class="method post">POST</span><span class="endpoint-path">/auth/logout</span><span class="endpoint-note">Blacklist current tokens</span></div>
+        <div class="endpoint"><span class="method post">POST</span><span class="endpoint-path">/auth/forgot-password</span><span class="endpoint-note">Send reset email</span></div>
+        <div class="endpoint"><span class="method post">POST</span><span class="endpoint-path">/auth/reset-password</span><span class="endpoint-note">Update password with token</span></div>
+        <div class="endpoint"><span class="method get">GET</span><span class="endpoint-path">/auth/me</span><span class="endpoint-note">Return current user info</span></div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" disabled style="opacity:.3">← Start</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:8%"></div></div><div class="prog-label">1 / 12</div></div>
+        <button class="nav-btn fwd" onclick="show(1)">Project Setup →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S1: Project Structure           -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s1">
+      <div class="sec-eyebrow">Chapter 2 · Foundations</div>
+      <h1 class="sec-title">Project Structure & Setup</h1>
+      <p class="sec-lead">A clean, modular layout separates concerns from day one. Routers, schemas, models, services, and utilities each live in their own file — easy to test and extend.</p>
+      <div class="prose">
+        <h3>Directory Layout</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">auth-service/</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre>auth-service/
+├── app/
+│   ├── main.py            <span class="cm"># FastAPI app entry point</span>
+│   ├── config.py          <span class="cm"># Settings via pydantic-settings</span>
+│   ├── database.py        <span class="cm"># SQLAlchemy async engine + session</span>
+│   ├── models.py          <span class="cm"># ORM: User, RefreshToken, ResetToken</span>
+│   ├── schemas.py         <span class="cm"># Pydantic request/response models</span>
+│   ├── routers/
+│   │   └── auth.py        <span class="cm"># All /auth/* endpoints</span>
+│   ├── services/
+│   │   ├── auth_service.py    <span class="cm"># Business logic: login, register…</span>
+│   │   └── email_service.py   <span class="cm"># Send emails via SMTP/SendGrid</span>
+│   └── utils/
+│       ├── jwt.py         <span class="cm"># create_token, decode_token</span>
+│       ├── password.py    <span class="cm"># hash_password, verify_password</span>
+│       └── redis.py       <span class="cm"># Token blacklist helpers</span>
+├── requirements.txt
+├── Dockerfile
+└── .env</pre>
+        </div>
+
+        <h3>Dependencies</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">requirements.txt</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre>fastapi==0.111.0
+uvicorn[standard]==0.29.0
+sqlalchemy[asyncio]==2.0.30
+asyncpg==0.29.0             <span class="cm"># async PostgreSQL driver</span>
+alembic==1.13.1
+pydantic-settings==2.2.1
+python-jose[cryptography]==3.3.0   <span class="cm"># JWT</span>
+passlib[bcrypt]==1.7.4             <span class="cm"># Password hashing</span>
+redis[asyncio]==5.0.4              <span class="cm"># Token blacklist</span>
+fastapi-mail==1.4.1                <span class="cm"># Email sending</span>
+python-multipart==0.0.9            <span class="cm"># Form data (OAuth2)</span></pre>
+        </div>
+
+        <h3>Configuration with Pydantic Settings</h3>
+        <p>Every secret and tunable value lives in <code>.env</code> and is validated at startup. No hardcoded strings — ever.</p>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/config.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">from</span> pydantic_settings <span class="kw">import</span> BaseSettings
+<span class="kw">from</span> functools <span class="kw">import</span> lru_cache
+
+<span class="kw">class</span> <span class="tp">Settings</span>(BaseSettings):
+    <span class="cm"># Database</span>
+    DATABASE_URL: <span class="tp">str</span>                   <span class="cm"># postgresql+asyncpg://…</span>
+
+    <span class="cm"># JWT</span>
+    JWT_SECRET: <span class="tp">str</span>                     <span class="cm"># long random string</span>
+    JWT_ALGORITHM: <span class="tp">str</span> = <span class="st">"HS256"</span>
+    ACCESS_TOKEN_EXPIRE_MINUTES: <span class="tp">int</span> = <span class="nm">15</span>
+    REFRESH_TOKEN_EXPIRE_DAYS: <span class="tp">int</span> = <span class="nm">7</span>
+
+    <span class="cm"># Redis (token blacklist)</span>
+    REDIS_URL: <span class="tp">str</span> = <span class="st">"redis://localhost:6379"</span>
+
+    <span class="cm"># Email</span>
+    MAIL_USERNAME: <span class="tp">str</span>
+    MAIL_PASSWORD: <span class="tp">str</span>
+    MAIL_FROM: <span class="tp">str</span>
+    MAIL_SERVER: <span class="tp">str</span>
+    MAIL_PORT: <span class="tp">int</span> = <span class="nm">587</span>
+
+    <span class="cm"># App</span>
+    FRONTEND_URL: <span class="tp">str</span> = <span class="st">"http://localhost:3000"</span>
+
+    <span class="kw">class</span> <span class="tp">Config</span>:
+        env_file = <span class="st">".env"</span>
+
+<span class="dc">@lru_cache</span>
+<span class="kw">def</span> <span class="fn">get_settings</span>() -> <span class="tp">Settings</span>:
+    <span class="kw">return</span> Settings()
+
+settings = <span class="fn">get_settings</span>()</pre>
+        </div>
+
+        <h3>FastAPI App Entry Point</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/main.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI
+<span class="kw">from</span> app.routers <span class="kw">import</span> auth
+<span class="kw">from</span> app.database <span class="kw">import</span> create_tables
+
+app = FastAPI(
+    title=<span class="st">"Auth Service"</span>,
+    description=<span class="st">"Authentication: login, register, refresh, logout, reset"</span>,
+    version=<span class="st">"1.0.0"</span>
+)
+
+<span class="dc">@app.on_event</span>(<span class="st">"startup"</span>)
+<span class="kw">async def</span> <span class="fn">startup</span>():
+    <span class="kw">await</span> create_tables()   <span class="cm"># create DB tables if not exist</span>
+
+app.include_router(auth.router, prefix=<span class="st">"/auth"</span>, tags=[<span class="st">"auth"</span>])
+
+<span class="dc">@app.get</span>(<span class="st">"/health"</span>)
+<span class="kw">async def</span> <span class="fn">health</span>(): <span class="kw">return</span> {<span class="st">"status"</span>: <span class="st">"ok"</span>}</pre>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(0)">← Why Auth Service</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:16%"></div></div><div class="prog-label">2 / 12</div></div>
+        <button class="nav-btn fwd" onclick="show(2)">Database & Models →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S2: Database & Models           -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s2">
+      <div class="sec-eyebrow">Chapter 3 · Foundations</div>
+      <h1 class="sec-title">Database & Models</h1>
+      <p class="sec-lead">Three tables power the entire auth service: <code>users</code> for identity, <code>refresh_tokens</code> for the long-lived session, and <code>password_reset_tokens</code> for the forgot-password flow.</p>
+      <div class="prose">
+        <h3>Async Database Setup</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/database.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">from</span> sqlalchemy.ext.asyncio <span class="kw">import</span> AsyncSession, create_async_engine
+<span class="kw">from</span> sqlalchemy.orm <span class="kw">import</span> sessionmaker, DeclarativeBase
+<span class="kw">from</span> app.config <span class="kw">import</span> settings
+
+engine = <span class="fn">create_async_engine</span>(settings.DATABASE_URL, echo=<span class="kw">False</span>)
+
+AsyncSessionLocal = <span class="fn">sessionmaker</span>(
+    engine, class_=AsyncSession, expire_on_commit=<span class="kw">False</span>
+)
+
+<span class="kw">class</span> <span class="tp">Base</span>(DeclarativeBase):
+    <span class="kw">pass</span>
+
+<span class="kw">async def</span> <span class="fn">create_tables</span>():
+    <span class="kw">async with</span> engine.begin() <span class="kw">as</span> conn:
+        <span class="kw">await</span> conn.run_sync(Base.metadata.create_all)
+
+<span class="kw">async def</span> <span class="fn">get_db</span>():           <span class="cm"># FastAPI dependency</span>
+    <span class="kw">async with</span> <span class="fn">AsyncSessionLocal</span>() <span class="kw">as</span> session:
+        <span class="kw">yield</span> session</pre>
+        </div>
+
+        <h3>ORM Models</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/models.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">from</span> sqlalchemy <span class="kw">import</span> String, Boolean, DateTime, ForeignKey, func
+<span class="kw">from</span> sqlalchemy.orm <span class="kw">import</span> Mapped, mapped_column, relationship
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+<span class="kw">from</span> app.database <span class="kw">import</span> Base
+
+<span class="kw">class</span> <span class="tp">User</span>(Base):
+    __tablename__ = <span class="st">"users"</span>
+
+    id:           Mapped[<span class="tp">int</span>]      = mapped_column(primary_key=<span class="kw">True</span>)
+    email:        Mapped[<span class="tp">str</span>]      = mapped_column(String(<span class="nm">255</span>), unique=<span class="kw">True</span>, index=<span class="kw">True</span>)
+    hashed_password: Mapped[<span class="tp">str</span>]   = mapped_column(String(<span class="nm">255</span>))
+    is_active:    Mapped[<span class="tp">bool</span>]     = mapped_column(Boolean, default=<span class="kw">True</span>)
+    is_verified:  Mapped[<span class="tp">bool</span>]     = mapped_column(Boolean, default=<span class="kw">False</span>)
+    created_at:   Mapped[datetime]  = mapped_column(DateTime, server_default=func.now())
+
+    refresh_tokens: Mapped[list[<span class="st">"RefreshToken"</span>]] = <span class="fn">relationship</span>(back_populates=<span class="st">"user"</span>, cascade=<span class="st">"all, delete"</span>)
+    reset_tokens:   Mapped[list[<span class="st">"PasswordResetToken"</span>]] = <span class="fn">relationship</span>(back_populates=<span class="st">"user"</span>, cascade=<span class="st">"all, delete"</span>)
+
+<span class="kw">class</span> <span class="tp">RefreshToken</span>(Base):
+    <span class="cm"># Stores refresh tokens in the DB for rotation + revocation</span>
+    __tablename__ = <span class="st">"refresh_tokens"</span>
+
+    id:         Mapped[<span class="tp">int</span>]      = mapped_column(primary_key=<span class="kw">True</span>)
+    user_id:    Mapped[<span class="tp">int</span>]      = mapped_column(ForeignKey(<span class="st">"users.id"</span>))
+    token_hash: Mapped[<span class="tp">str</span>]      = mapped_column(String(<span class="nm">255</span>), unique=<span class="kw">True</span>)
+    expires_at: Mapped[datetime]  = mapped_column(DateTime)
+    revoked:    Mapped[<span class="tp">bool</span>]     = mapped_column(Boolean, default=<span class="kw">False</span>)
+    created_at: Mapped[datetime]  = mapped_column(DateTime, server_default=func.now())
+
+    user: Mapped[<span class="st">"User"</span>] = <span class="fn">relationship</span>(back_populates=<span class="st">"refresh_tokens"</span>)
+
+<span class="kw">class</span> <span class="tp">PasswordResetToken</span>(Base):
+    __tablename__ = <span class="st">"password_reset_tokens"</span>
+
+    id:         Mapped[<span class="tp">int</span>]      = mapped_column(primary_key=<span class="kw">True</span>)
+    user_id:    Mapped[<span class="tp">int</span>]      = mapped_column(ForeignKey(<span class="st">"users.id"</span>))
+    token_hash: Mapped[<span class="tp">str</span>]      = mapped_column(String(<span class="nm">255</span>), unique=<span class="kw">True</span>)
+    expires_at: Mapped[datetime]  = mapped_column(DateTime)
+    used:       Mapped[<span class="tp">bool</span>]     = mapped_column(Boolean, default=<span class="kw">False</span>)
+    created_at: Mapped[datetime]  = mapped_column(DateTime, server_default=func.now())
+
+    user: Mapped[<span class="st">"User"</span>] = <span class="fn">relationship</span>(back_populates=<span class="st">"reset_tokens"</span>)</pre>
+        </div>
+
+        <div class="callout note">
+          <span class="callout-mark">Note</span>
+          <div>We store a <strong>hash</strong> of the refresh token and the reset token in the database, never the raw token itself. If the database is leaked, the attacker still cannot use the tokens. The raw token is only ever sent to the user over HTTPS.</div>
+        </div>
+
+        <h3>Pydantic Schemas</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/schemas.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">from</span> pydantic <span class="kw">import</span> BaseModel, EmailStr, field_validator
+<span class="kw">import</span> re
+
+<span class="kw">class</span> <span class="tp">RegisterRequest</span>(BaseModel):
+    email:    <span class="tp">EmailStr</span>
+    password: <span class="tp">str</span>
+
+    <span class="dc">@field_validator</span>(<span class="st">"password"</span>)
+    <span class="dc">@classmethod</span>
+    <span class="kw">def</span> <span class="fn">password_strength</span>(cls, v):
+        <span class="kw">if</span> len(v) < <span class="nm">8</span>:
+            <span class="kw">raise</span> ValueError(<span class="st">"Password must be at least 8 characters"</span>)
+        <span class="kw">if not</span> re.<span class="fn">search</span>(<span class="st">r"[A-Z]"</span>, v):
+            <span class="kw">raise</span> ValueError(<span class="st">"Password must contain an uppercase letter"</span>)
+        <span class="kw">if not</span> re.<span class="fn">search</span>(<span class="st">r"\d"</span>, v):
+            <span class="kw">raise</span> ValueError(<span class="st">"Password must contain a digit"</span>)
+        <span class="kw">return</span> v
+
+<span class="kw">class</span> <span class="tp">LoginRequest</span>(BaseModel):
+    email:    <span class="tp">EmailStr</span>
+    password: <span class="tp">str</span>
+
+<span class="kw">class</span> <span class="tp">TokenResponse</span>(BaseModel):
+    access_token:  <span class="tp">str</span>
+    refresh_token: <span class="tp">str</span>
+    token_type:    <span class="tp">str</span> = <span class="st">"bearer"</span>
+
+<span class="kw">class</span> <span class="tp">RefreshRequest</span>(BaseModel):
+    refresh_token: <span class="tp">str</span>
+
+<span class="kw">class</span> <span class="tp">ForgotPasswordRequest</span>(BaseModel):
+    email: <span class="tp">EmailStr</span>
+
+<span class="kw">class</span> <span class="tp">ResetPasswordRequest</span>(BaseModel):
+    token:        <span class="tp">str</span>
+    new_password: <span class="tp">str</span>
+
+<span class="kw">class</span> <span class="tp">UserResponse</span>(BaseModel):
+    id:          <span class="tp">int</span>
+    email:       <span class="tp">str</span>
+    is_verified: <span class="tp">bool</span>
+    <span class="kw">class</span> <span class="tp">Config</span>: from_attributes = <span class="kw">True</span></pre>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(1)">← Project Setup</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:25%"></div></div><div class="prog-label">3 / 12</div></div>
+        <button class="nav-btn fwd" onclick="show(3)">Registration →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S3: Registration                -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s3">
+      <div class="sec-eyebrow">Chapter 4 · Core Auth Flows</div>
+      <h1 class="sec-title">Registration & Password Hashing</h1>
+      <p class="sec-lead">Registration is the first touch-point with a user's identity. The golden rule: <strong>never store a plain-text password</strong>. We use bcrypt, which is intentionally slow — making brute-force attacks computationally expensive.</p>
+      <div class="prose">
+        <h3>Password Hashing Utility</h3>
+        <p>Bcrypt stores the salt inside the hash itself. Every time you hash the same password, you get a different result — which also means you cannot compare hashes directly; you must use <code>verify_password</code>.</p>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/utils/password.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">from</span> passlib.context <span class="kw">import</span> CryptContext
+
+<span class="cm"># bcrypt with cost factor 12 (2^12 iterations — strong but not painfully slow)</span>
+pwd_context = <span class="fn">CryptContext</span>(schemes=[<span class="st">"bcrypt"</span>], deprecated=<span class="st">"auto"</span>)
+
+<span class="kw">def</span> <span class="fn">hash_password</span>(plain: <span class="tp">str</span>) -> <span class="tp">str</span>:
+    <span class="kw">return</span> pwd_context.<span class="fn">hash</span>(plain)
+
+<span class="kw">def</span> <span class="fn">verify_password</span>(plain: <span class="tp">str</span>, hashed: <span class="tp">str</span>) -> <span class="tp">bool</span>:
+    <span class="kw">return</span> pwd_context.<span class="fn">verify</span>(plain, hashed)
+
+<span class="cm"># Example result of hash_password("mySecret1"):</span>
+<span class="cm"># $2b$12$eXbDnzpI9AB/EKd7kqTq9.7yB2YPHfHLqz7.XzW8eYiJgbRe1lChy</span>
+<span class="cm"># ──┬──────────────── salt ──────────────── hash ──────────────</span>
+<span class="cm"># $2b$12$ → bcrypt with 12 rounds</span></pre>
+        </div>
+
+        <h3>Registration Service Logic</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/services/auth_service.py (register)</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">from</span> sqlalchemy.ext.asyncio <span class="kw">import</span> AsyncSession
+<span class="kw">from</span> sqlalchemy <span class="kw">import</span> select
+<span class="kw">from</span> fastapi <span class="kw">import</span> HTTPException, status
+<span class="kw">from</span> app.models <span class="kw">import</span> User
+<span class="kw">from</span> app.utils.password <span class="kw">import</span> hash_password
+<span class="kw">from</span> app.schemas <span class="kw">import</span> RegisterRequest
+
+<span class="kw">async def</span> <span class="fn">register_user</span>(data: <span class="tp">RegisterRequest</span>, db: <span class="tp">AsyncSession</span>) -> <span class="tp">User</span>:
+    <span class="cm"># 1. Check email uniqueness</span>
+    result = <span class="kw">await</span> db.<span class="fn">execute</span>(<span class="fn">select</span>(User).<span class="fn">where</span>(User.email == data.email))
+    existing = result.scalars().<span class="fn">first</span>()
+    <span class="kw">if</span> existing:
+        <span class="kw">raise</span> HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=<span class="st">"Email already registered"</span>
+        )
+
+    <span class="cm"># 2. Hash the password — NEVER store plain text</span>
+    hashed = <span class="fn">hash_password</span>(data.password)
+
+    <span class="cm"># 3. Persist the new user</span>
+    user = <span class="fn">User</span>(email=data.email, hashed_password=hashed)
+    db.<span class="fn">add</span>(user)
+    <span class="kw">await</span> db.<span class="fn">commit</span>()
+    <span class="kw">await</span> db.<span class="fn">refresh</span>(user)
+
+    <span class="kw">return</span> user</pre>
+        </div>
+
+        <h3>Registration Endpoint</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/routers/auth.py (register)</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">from</span> fastapi <span class="kw">import</span> APIRouter, Depends, status
+<span class="kw">from</span> sqlalchemy.ext.asyncio <span class="kw">import</span> AsyncSession
+<span class="kw">from</span> app.database <span class="kw">import</span> get_db
+<span class="kw">from</span> app.schemas <span class="kw">import</span> RegisterRequest, UserResponse
+<span class="kw">from</span> app.services.auth_service <span class="kw">import</span> register_user
+
+router = <span class="fn">APIRouter</span>()
+
+<span class="dc">@router.post</span>(<span class="st">"/register"</span>, response_model=<span class="tp">UserResponse</span>, status_code=status.HTTP_201_CREATED)
+<span class="kw">async def</span> <span class="fn">register</span>(
+    data: <span class="tp">RegisterRequest</span>,
+    db: <span class="tp">AsyncSession</span> = <span class="fn">Depends</span>(get_db)
+):
+    <span class="st">"""Create a new user account."""</span>
+    user = <span class="kw">await</span> <span class="fn">register_user</span>(data, db)
+    <span class="kw">return</span> user</pre>
+        </div>
+
+        <div class="callout warn">
+          <span class="callout-mark">Timing</span>
+          <div>Always run <code>hash_password</code> even when the user doesn't exist (to prevent timing-based user enumeration). An attacker can deduce registered emails if your "wrong email" path returns instantly while "wrong password" takes 100 ms for bcrypt. Return the same generic error for both.</div>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(2)">← Models</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:33%"></div></div><div class="prog-label">4 / 12</div></div>
+        <button class="nav-btn fwd" onclick="show(4)">Login & JWT →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S4: Login & JWT                 -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s4">
+      <div class="sec-eyebrow">Chapter 5 · Core Auth Flows</div>
+      <h1 class="sec-title">Login & JWT Issuance</h1>
+      <p class="sec-lead">Login validates credentials and returns a short-lived access token and a long-lived refresh token. Understanding the JWT structure helps you debug and secure your system.</p>
+      <div class="prose">
+        <h3>JWT Utility</h3>
+        <p>A JWT has three base64url-encoded parts separated by dots: <strong>header</strong> (algorithm), <strong>payload</strong> (claims), and <strong>signature</strong>. The signature is computed with your <code>JWT_SECRET</code> — any tampering invalidates it.</p>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/utils/jwt.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">from</span> jose <span class="kw">import</span> jwt, JWTError
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, timedelta, timezone
+<span class="kw">from</span> app.config <span class="kw">import</span> settings
+
+<span class="kw">def</span> <span class="fn">create_access_token</span>(user_id: <span class="tp">int</span>) -> <span class="tp">str</span>:
+    expire = datetime.<span class="fn">now</span>(timezone.utc) + timedelta(
+        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+    )
+    payload = {
+        <span class="st">"sub"</span>:  <span class="fn">str</span>(user_id),   <span class="cm"># subject — who owns this token</span>
+        <span class="st">"type"</span>: <span class="st">"access"</span>,         <span class="cm"># so we can reject refresh tokens here</span>
+        <span class="st">"exp"</span>:  expire,
+        <span class="st">"iat"</span>:  datetime.<span class="fn">now</span>(timezone.utc)
+    }
+    <span class="kw">return</span> jwt.<span class="fn">encode</span>(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+
+<span class="kw">def</span> <span class="fn">create_refresh_token</span>(user_id: <span class="tp">int</span>) -> <span class="tp">str</span>:
+    expire = datetime.<span class="fn">now</span>(timezone.utc) + timedelta(
+        days=settings.REFRESH_TOKEN_EXPIRE_DAYS
+    )
+    payload = {
+        <span class="st">"sub"</span>:  <span class="fn">str</span>(user_id),
+        <span class="st">"type"</span>: <span class="st">"refresh"</span>,        <span class="cm"># cannot be used as an access token</span>
+        <span class="st">"exp"</span>:  expire,
+        <span class="st">"iat"</span>:  datetime.<span class="fn">now</span>(timezone.utc)
+    }
+    <span class="kw">return</span> jwt.<span class="fn">encode</span>(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+
+<span class="kw">def</span> <span class="fn">decode_token</span>(token: <span class="tp">str</span>) -> <span class="tp">dict</span>:
+    <span class="kw">try</span>:
+        payload = jwt.<span class="fn">decode</span>(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+        <span class="kw">return</span> payload
+    <span class="kw">except</span> JWTError:
+        <span class="kw">return</span> <span class="kw">None</span></pre>
+        </div>
+
+        <h3>Login Service</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/services/auth_service.py (login)</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">import</span> hashlib
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, timedelta, timezone
+<span class="kw">from</span> app.models <span class="kw">import</span> RefreshToken
+<span class="kw">from</span> app.utils.jwt <span class="kw">import</span> create_access_token, create_refresh_token
+<span class="kw">from</span> app.utils.password <span class="kw">import</span> verify_password
+
+<span class="kw">async def</span> <span class="fn">login_user</span>(data: <span class="tp">LoginRequest</span>, db: <span class="tp">AsyncSession</span>):
+    <span class="cm"># 1. Look up user by email</span>
+    result = <span class="kw">await</span> db.<span class="fn">execute</span>(<span class="fn">select</span>(User).<span class="fn">where</span>(User.email == data.email))
+    user = result.scalars().<span class="fn">first</span>()
+
+    <span class="cm"># 2. Verify password — use dummy hash if user not found (timing-safe)</span>
+    dummy_hash = <span class="st">"$2b$12$invalidhashtopreventtimingattacks"</span>
+    stored_hash = user.hashed_password <span class="kw">if</span> user <span class="kw">else</span> dummy_hash
+    password_ok = <span class="fn">verify_password</span>(data.password, stored_hash)
+
+    <span class="kw">if not</span> user <span class="kw">or not</span> password_ok:
+        <span class="kw">raise</span> HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=<span class="st">"Invalid credentials"</span>  <span class="cm"># always the same message!</span>
+        )
+
+    <span class="cm"># 3. Create token pair</span>
+    access_token  = <span class="fn">create_access_token</span>(user.id)
+    refresh_token = <span class="fn">create_refresh_token</span>(user.id)
+
+    <span class="cm"># 4. Persist a HASH of the refresh token in the DB</span>
+    token_hash = hashlib.<span class="fn">sha256</span>(refresh_token.<span class="fn">encode</span>()).<span class="fn">hexdigest</span>()
+    rt = <span class="fn">RefreshToken</span>(
+        user_id    = user.id,
+        token_hash = token_hash,
+        expires_at = datetime.<span class="fn">now</span>(timezone.utc) + timedelta(days=<span class="nm">7</span>)
+    )
+    db.<span class="fn">add</span>(rt)
+    <span class="kw">await</span> db.<span class="fn">commit</span>()
+
+    <span class="kw">return</span> {
+        <span class="st">"access_token"</span>:  access_token,
+        <span class="st">"refresh_token"</span>: refresh_token,
+        <span class="st">"token_type"</span>:    <span class="st">"bearer"</span>
+    }</pre>
+        </div>
+
+        <h3>Login Endpoint</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/routers/auth.py (login)</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="dc">@router.post</span>(<span class="st">"/login"</span>, response_model=<span class="tp">TokenResponse</span>)
+<span class="kw">async def</span> <span class="fn">login</span>(
+    data: <span class="tp">LoginRequest</span>,
+    db: <span class="tp">AsyncSession</span> = <span class="fn">Depends</span>(get_db)
+):
+    <span class="st">"""Authenticate and return JWT access + refresh tokens."""</span>
+    tokens = <span class="kw">await</span> <span class="fn">login_user</span>(data, db)
+    <span class="kw">return</span> tokens</pre>
+        </div>
+
+        <div class="callout tip">
+          <span class="callout-mark">Tip</span>
+          <div>The access token payload is <strong>not encrypted</strong> — it's base64-encoded and signed. Anyone who holds it can decode the claims (user id, expiry). Never put sensitive data (SSN, password, credit card) in a JWT payload. Only store non-sensitive identifiers.</div>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(3)">← Registration</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:41%"></div></div><div class="prog-label">5 / 12</div></div>
+        <button class="nav-btn fwd" onclick="show(5)">Token Refresh →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S5: Token Refresh               -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s5">
+      <div class="sec-eyebrow">Chapter 6 · Core Auth Flows</div>
+      <h1 class="sec-title">Token Refresh Strategy</h1>
+      <p class="sec-lead">When an access token expires, the client silently sends its refresh token to get a new pair. This keeps users logged in without re-entering their password — while maintaining short-window security.</p>
+      <div class="prose">
+        <h3>The Refresh Flow</h3>
+        <div class="steps">
+          <div class="step">
+            <div class="step-l"><div class="step-dot">1</div><div class="step-line"></div></div>
+            <div class="step-r"><div class="step-t">Client receives 401 on an API call</div><div class="step-b">The access token has expired (<code>exp</code> is in the past).</div></div>
+          </div>
+          <div class="step">
+            <div class="step-l"><div class="step-dot">2</div><div class="step-line"></div></div>
+            <div class="step-r"><div class="step-t">Client calls POST /auth/refresh with the refresh token</div><div class="step-b">Sends <code>{"refresh_token": "eyJ..."}</code> in the request body.</div></div>
+          </div>
+          <div class="step">
+            <div class="step-l"><div class="step-dot">3</div><div class="step-line"></div></div>
+            <div class="step-r"><div class="step-t">Server verifies the refresh token</div><div class="step-b">Decodes JWT, checks <code>type == "refresh"</code>, looks up the hash in DB, ensures it's not revoked or expired.</div></div>
+          </div>
+          <div class="step">
+            <div class="step-l"><div class="step-dot">4</div><div class="step-line"></div></div>
+            <div class="step-r"><div class="step-t">Server rotates: revokes old, issues new pair</div><div class="step-b">Old DB record is marked <code>revoked = True</code>. New access + refresh tokens are returned.</div></div>
+          </div>
+        </div>
+
+        <h3>Refresh Service</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/services/auth_service.py (refresh)</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">async def</span> <span class="fn">refresh_tokens</span>(refresh_token: <span class="tp">str</span>, db: <span class="tp">AsyncSession</span>):
+    <span class="cm"># 1. Decode and validate JWT structure</span>
+    payload = <span class="fn">decode_token</span>(refresh_token)
+    <span class="kw">if not</span> payload <span class="kw">or</span> payload.<span class="fn">get</span>(<span class="st">"type"</span>) != <span class="st">"refresh"</span>:
+        <span class="kw">raise</span> HTTPException(<span class="nm">401</span>, <span class="st">"Invalid refresh token"</span>)
+
+    user_id = <span class="tp">int</span>(payload[<span class="st">"sub"</span>])
+
+    <span class="cm"># 2. Find matching DB record by hash</span>
+    token_hash = hashlib.<span class="fn">sha256</span>(refresh_token.<span class="fn">encode</span>()).<span class="fn">hexdigest</span>()
+    result = <span class="kw">await</span> db.<span class="fn">execute</span>(
+        <span class="fn">select</span>(RefreshToken)
+        .<span class="fn">where</span>(RefreshToken.token_hash == token_hash)
+        .<span class="fn">where</span>(RefreshToken.revoked == <span class="kw">False</span>)
+    )
+    db_token = result.scalars().<span class="fn">first</span>()
+    <span class="kw">if not</span> db_token:
+        <span class="kw">raise</span> HTTPException(<span class="nm">401</span>, <span class="st">"Refresh token revoked or not found"</span>)
+
+    <span class="cm"># 3. Revoke the old token (token rotation)</span>
+    db_token.revoked = <span class="kw">True</span>
+
+    <span class="cm"># 4. Issue a new pair</span>
+    new_access  = <span class="fn">create_access_token</span>(user_id)
+    new_refresh = <span class="fn">create_refresh_token</span>(user_id)
+
+    new_hash = hashlib.<span class="fn">sha256</span>(new_refresh.<span class="fn">encode</span>()).<span class="fn">hexdigest</span>()
+    db.<span class="fn">add</span>(<span class="fn">RefreshToken</span>(
+        user_id    = user_id,
+        token_hash = new_hash,
+        expires_at = datetime.<span class="fn">now</span>(timezone.utc) + timedelta(days=<span class="nm">7</span>)
+    ))
+    <span class="kw">await</span> db.<span class="fn">commit</span>()
+
+    <span class="kw">return</span> {<span class="st">"access_token"</span>: new_access, <span class="st">"refresh_token"</span>: new_refresh, <span class="st">"token_type"</span>: <span class="st">"bearer"</span>}</pre>
+        </div>
+
+        <h3>Refresh Endpoint</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/routers/auth.py (refresh)</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="dc">@router.post</span>(<span class="st">"/refresh"</span>, response_model=<span class="tp">TokenResponse</span>)
+<span class="kw">async def</span> <span class="fn">refresh</span>(
+    data: <span class="tp">RefreshRequest</span>,
+    db: <span class="tp">AsyncSession</span> = <span class="fn">Depends</span>(get_db)
+):
+    <span class="st">"""Exchange a valid refresh token for a new token pair."""</span>
+    <span class="kw">return await</span> <span class="fn">refresh_tokens</span>(data.refresh_token, db)</pre>
+        </div>
+
+        <div class="callout critical">
+          <span class="callout-mark">Security</span>
+          <div><strong>Refresh token reuse detection:</strong> if you see a revoked refresh token being submitted, it means a token theft occurred and both the old and new tokens should be invalidated. Mark all refresh tokens for that user as revoked and force re-login.</div>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(4)">← Login</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:50%"></div></div><div class="prog-label">6 / 12</div></div>
+        <button class="nav-btn fwd" onclick="show(6)">Logout →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S6: Logout                      -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s6">
+      <div class="sec-eyebrow">Chapter 7 · Core Auth Flows</div>
+      <h1 class="sec-title">Logout & Token Blacklist</h1>
+      <p class="sec-lead">JWTs are stateless — they're valid until they expire. Logout requires actively invalidating them. We use Redis as a fast blacklist: the token's JTI (or hash) is stored with a TTL matching the token's remaining lifetime.</p>
+      <div class="prose">
+        <h3>The Problem with Stateless JWTs</h3>
+        <p>You cannot "delete" a JWT the way you delete a session ID from the database. Once issued, a JWT is self-contained and valid until <code>exp</code>. So a user who logs out but whose token was stolen still has a valid token in the attacker's hands.</p>
+        <p>The solution: a <strong>Redis blacklist</strong>. On logout, we store the token's unique identifier in Redis with a TTL equal to the remaining lifetime. Every protected endpoint checks this blacklist before trusting a token.</p>
+
+        <h3>Redis Utility</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/utils/redis.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">import</span> redis.asyncio <span class="kw">as</span> aioredis
+<span class="kw">from</span> app.config <span class="kw">import</span> settings
+
+redis_client: aioredis.Redis = <span class="kw">None</span>
+
+<span class="kw">async def</span> <span class="fn">get_redis</span>() -> aioredis.Redis:
+    <span class="kw">global</span> redis_client
+    <span class="kw">if</span> redis_client <span class="kw">is None</span>:
+        redis_client = <span class="kw">await</span> aioredis.<span class="fn">from_url</span>(settings.REDIS_URL)
+    <span class="kw">return</span> redis_client
+
+<span class="kw">async def</span> <span class="fn">blacklist_token</span>(jti: <span class="tp">str</span>, ttl_seconds: <span class="tp">int</span>):
+    <span class="st">"""Store a token ID in Redis so it's rejected on every future request."""</span>
+    r = <span class="kw">await</span> <span class="fn">get_redis</span>()
+    <span class="kw">await</span> r.<span class="fn">setex</span>(<span class="fn">f</span><span class="st">"blacklist:{jti}"</span>, ttl_seconds, <span class="st">"1"</span>)
+
+<span class="kw">async def</span> <span class="fn">is_blacklisted</span>(jti: <span class="tp">str</span>) -> <span class="tp">bool</span>:
+    r = <span class="kw">await</span> <span class="fn">get_redis</span>()
+    <span class="kw">return await</span> r.<span class="fn">exists</span>(<span class="fn">f</span><span class="st">"blacklist:{jti}"</span>) == <span class="nm">1</span></pre>
+        </div>
+
+        <h3>Updating the JWT to include a JTI</h3>
+        <p>We add a <code>jti</code> (JWT ID) claim — a unique random string — to every token. This is what we blacklist, not the full token string.</p>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/utils/jwt.py (updated with jti)</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">import</span> uuid
+
+<span class="kw">def</span> <span class="fn">create_access_token</span>(user_id: <span class="tp">int</span>) -> <span class="tp">str</span>:
+    expire = datetime.<span class="fn">now</span>(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    payload = {
+        <span class="st">"sub"</span>:  <span class="fn">str</span>(user_id),
+        <span class="st">"type"</span>: <span class="st">"access"</span>,
+        <span class="st">"jti"</span>:  <span class="fn">str</span>(uuid.<span class="fn">uuid4</span>()),   <span class="cm"># unique identifier for THIS token</span>
+        <span class="st">"exp"</span>:  expire,
+        <span class="st">"iat"</span>:  datetime.<span class="fn">now</span>(timezone.utc)
+    }
+    <span class="kw">return</span> jwt.<span class="fn">encode</span>(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)</pre>
+        </div>
+
+        <h3>Protected Route Dependency</h3>
+        <p>Every secured endpoint uses this dependency to authenticate the request.</p>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/utils/jwt.py (get_current_user dependency)</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">from</span> fastapi.security <span class="kw">import</span> HTTPBearer, HTTPAuthorizationCredentials
+
+bearer_scheme = <span class="fn">HTTPBearer</span>()
+
+<span class="kw">async def</span> <span class="fn">get_current_user</span>(
+    credentials: <span class="tp">HTTPAuthorizationCredentials</span> = <span class="fn">Depends</span>(bearer_scheme),
+    db: <span class="tp">AsyncSession</span> = <span class="fn">Depends</span>(get_db)
+) -> <span class="tp">User</span>:
+    token = credentials.credentials
+
+    <span class="cm"># 1. Decode and validate JWT</span>
+    payload = <span class="fn">decode_token</span>(token)
+    <span class="kw">if not</span> payload <span class="kw">or</span> payload.<span class="fn">get</span>(<span class="st">"type"</span>) != <span class="st">"access"</span>:
+        <span class="kw">raise</span> HTTPException(<span class="nm">401</span>, <span class="st">"Invalid access token"</span>)
+
+    <span class="cm"># 2. Check blacklist</span>
+    jti = payload.<span class="fn">get</span>(<span class="st">"jti"</span>)
+    <span class="kw">if</span> jti <span class="kw">and await</span> <span class="fn">is_blacklisted</span>(jti):
+        <span class="kw">raise</span> HTTPException(<span class="nm">401</span>, <span class="st">"Token has been revoked"</span>)
+
+    <span class="cm"># 3. Load user from DB</span>
+    user_id = <span class="tp">int</span>(payload[<span class="st">"sub"</span>])
+    result = <span class="kw">await</span> db.<span class="fn">execute</span>(<span class="fn">select</span>(User).<span class="fn">where</span>(User.id == user_id))
+    user = result.scalars().<span class="fn">first</span>()
+    <span class="kw">if not</span> user <span class="kw">or not</span> user.is_active:
+        <span class="kw">raise</span> HTTPException(<span class="nm">401</span>, <span class="st">"User not found or deactivated"</span>)
+
+    <span class="kw">return</span> user</pre>
+        </div>
+
+        <h3>Logout Endpoint</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/routers/auth.py (logout)</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">from</span> app.utils.redis <span class="kw">import</span> blacklist_token
+<span class="kw">from</span> datetime <span class="kw">import</span> timezone
+
+<span class="dc">@router.post</span>(<span class="st">"/logout"</span>, status_code=<span class="nm">204</span>)
+<span class="kw">async def</span> <span class="fn">logout</span>(
+    credentials: <span class="tp">HTTPAuthorizationCredentials</span> = <span class="fn">Depends</span>(bearer_scheme),
+    db: <span class="tp">AsyncSession</span> = <span class="fn">Depends</span>(get_db),
+    current_user: <span class="tp">User</span> = <span class="fn">Depends</span>(get_current_user)
+):
+    <span class="st">"""Blacklist the current access token and revoke all refresh tokens."""</span>
+    token = credentials.credentials
+    payload = <span class="fn">decode_token</span>(token)
+
+    <span class="cm"># Blacklist the access token in Redis until it would expire naturally</span>
+    jti = payload.<span class="fn">get</span>(<span class="st">"jti"</span>)
+    exp = payload.<span class="fn">get</span>(<span class="st">"exp"</span>)
+    now = datetime.<span class="fn">now</span>(timezone.utc).<span class="fn">timestamp</span>()
+    ttl = <span class="tp">int</span>(exp - now)
+    <span class="kw">if</span> ttl > <span class="nm">0</span>:
+        <span class="kw">await</span> <span class="fn">blacklist_token</span>(jti, ttl)
+
+    <span class="cm"># Revoke ALL refresh tokens for this user in DB</span>
+    await db.execute(
+        update(RefreshToken)
+        .where(RefreshToken.user_id == current_user.id)
+        .where(RefreshToken.revoked == False)
+        .values(revoked=True)
+    )
+    <span class="kw">await</span> db.<span class="fn">commit</span>()
+    <span class="cm"># 204 No Content — no body returned</span></pre>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(5)">← Token Refresh</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:58%"></div></div><div class="prog-label">7 / 12</div></div>
+        <button class="nav-btn fwd" onclick="show(7)">Forgot Password →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S7: Forgot Password             -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s7">
+      <div class="sec-eyebrow">Chapter 8 · Password Recovery</div>
+      <h1 class="sec-title">Forgot Password Flow</h1>
+      <p class="sec-lead">The forgot-password endpoint sends a time-limited, single-use reset link to the user's email. The link contains a cryptographically random token — not the user's ID, not a JWT.</p>
+      <div class="prose">
+        <h3>Why Not a JWT for Reset?</h3>
+        <p>JWTs are self-verifying — you cannot "use them once" without storing state. A random token stored in the database (as a hash) is the correct choice: it can be verified, marked as used, and expired independently.</p>
+
+        <h3>The Full Flow</h3>
+        <div class="steps">
+          <div class="step">
+            <div class="step-l"><div class="step-dot">1</div><div class="step-line"></div></div>
+            <div class="step-r"><div class="step-t">User submits POST /auth/forgot-password with their email</div><div class="step-b">Always return <code>200 OK</code> with the same message — even if the email isn't registered. This prevents email enumeration.</div></div>
+          </div>
+          <div class="step">
+            <div class="step-l"><div class="step-dot">2</div><div class="step-line"></div></div>
+            <div class="step-r"><div class="step-t">Server generates a secure random token</div><div class="step-b"><code>secrets.token_urlsafe(32)</code> — 32 bytes = 256 bits of entropy. Cannot be guessed.</div></div>
+          </div>
+          <div class="step">
+            <div class="step-l"><div class="step-dot">3</div><div class="step-line"></div></div>
+            <div class="step-r"><div class="step-t">Token hash is stored in the DB; raw token is sent by email</div><div class="step-b">The DB stores <code>sha256(token)</code>. Only the user receives the raw token via email.</div></div>
+          </div>
+          <div class="step">
+            <div class="step-l"><div class="step-dot">4</div><div class="step-line"></div></div>
+            <div class="step-r"><div class="step-t">Email contains a link: frontend_url/reset-password?token=…</div><div class="step-b">The frontend reads the token from the URL and sends it to POST /auth/reset-password.</div></div>
+          </div>
+        </div>
+
+        <h3>Forgot Password Service</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/services/auth_service.py (forgot_password)</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">import</span> secrets, hashlib
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, timedelta, timezone
+<span class="kw">from</span> app.models <span class="kw">import</span> PasswordResetToken
+<span class="kw">from</span> app.services.email_service <span class="kw">import</span> send_reset_email
+<span class="kw">from</span> app.config <span class="kw">import</span> settings
+
+<span class="nm">RESET_TOKEN_EXPIRE_MINUTES</span> = <span class="nm">30</span>
+
+<span class="kw">async def</span> <span class="fn">forgot_password</span>(email: <span class="tp">str</span>, db: <span class="tp">AsyncSession</span>):
+    <span class="cm"># Always return success — never reveal whether email exists</span>
+    result = <span class="kw">await</span> db.<span class="fn">execute</span>(<span class="fn">select</span>(User).<span class="fn">where</span>(User.email == email))
+    user = result.scalars().<span class="fn">first</span>()
+
+    <span class="kw">if</span> user:  <span class="cm"># only act if user exists, but don't tell the caller</span>
+        <span class="cm"># 1. Expire any previous unused reset tokens for this user</span>
+        <span class="kw">await</span> db.<span class="fn">execute</span>(
+            <span class="fn">update</span>(PasswordResetToken)
+            .<span class="fn">where</span>(PasswordResetToken.user_id == user.id)
+            .<span class="fn">where</span>(PasswordResetToken.used == <span class="kw">False</span>)
+            .<span class="fn">values</span>(used=<span class="kw">True</span>)
+        )
+
+        <span class="cm"># 2. Generate the raw token (sent to user) and its hash (stored in DB)</span>
+        raw_token  = secrets.<span class="fn">token_urlsafe</span>(<span class="nm">32</span>)
+        token_hash = hashlib.<span class="fn">sha256</span>(raw_token.<span class="fn">encode</span>()).<span class="fn">hexdigest</span>()
+        expires_at = datetime.<span class="fn">now</span>(timezone.utc) + timedelta(minutes=<span class="nm">RESET_TOKEN_EXPIRE_MINUTES</span>)
+
+        <span class="cm"># 3. Persist the hashed token</span>
+        db.<span class="fn">add</span>(<span class="fn">PasswordResetToken</span>(
+            user_id    = user.id,
+            token_hash = token_hash,
+            expires_at = expires_at
+        ))
+        <span class="kw">await</span> db.<span class="fn">commit</span>()
+
+        <span class="cm"># 4. Send email with the raw token embedded in the reset link</span>
+        reset_link = <span class="fn">f</span><span class="st">"{settings.FRONTEND_URL}/reset-password?token={raw_token}"</span>
+        <span class="kw">await</span> <span class="fn">send_reset_email</span>(email=user.email, reset_link=reset_link)
+
+    <span class="cm"># Return the same response regardless</span>
+    <span class="kw">return</span> {<span class="st">"message"</span>: <span class="st">"If this email is registered, you will receive a reset link."</span>}</pre>
+        </div>
+
+        <h3>Forgot Password Endpoint</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/routers/auth.py (forgot-password)</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="dc">@router.post</span>(<span class="st">"/forgot-password"</span>)
+<span class="kw">async def</span> <span class="fn">forgot_password_route</span>(
+    data: <span class="tp">ForgotPasswordRequest</span>,
+    db: <span class="tp">AsyncSession</span> = <span class="fn">Depends</span>(get_db)
+):
+    <span class="st">"""Send password reset email. Always returns 200 to prevent enumeration."""</span>
+    <span class="kw">return await</span> <span class="fn">forgot_password</span>(data.email, db)</pre>
+        </div>
+
+        <div class="callout warn">
+          <span class="callout-mark">Rate Limit</span>
+          <div>Add rate limiting on <code>/forgot-password</code> — for example, max 3 requests per email per hour. Without this, an attacker can flood a victim's inbox or use this endpoint for a DoS. Use Redis with a sliding window counter keyed by email.</div>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(6)">← Logout</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:66%"></div></div><div class="prog-label">8 / 12</div></div>
+        <button class="nav-btn fwd" onclick="show(8)">Reset Password →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S8: Reset Password              -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s8">
+      <div class="sec-eyebrow">Chapter 9 · Password Recovery</div>
+      <h1 class="sec-title">Reset Password Endpoint</h1>
+      <p class="sec-lead">The reset endpoint receives the raw token from the URL, validates it against the database, updates the password, and immediately invalidates the token so it can only be used once.</p>
+      <div class="prose">
+        <h3>Reset Password Service</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/services/auth_service.py (reset_password)</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">async def</span> <span class="fn">reset_password</span>(token: <span class="tp">str</span>, new_password: <span class="tp">str</span>, db: <span class="tp">AsyncSession</span>):
+    <span class="cm"># 1. Hash the incoming token to look it up in DB</span>
+    token_hash = hashlib.<span class="fn">sha256</span>(token.<span class="fn">encode</span>()).<span class="fn">hexdigest</span>()
+
+    <span class="cm"># 2. Find a valid, unused, non-expired record</span>
+    now = datetime.<span class="fn">now</span>(timezone.utc)
+    result = <span class="kw">await</span> db.<span class="fn">execute</span>(
+        <span class="fn">select</span>(PasswordResetToken)
+        .<span class="fn">where</span>(PasswordResetToken.token_hash == token_hash)
+        .<span class="fn">where</span>(PasswordResetToken.used       == <span class="kw">False</span>)
+        .<span class="fn">where</span>(PasswordResetToken.expires_at  > now)
+    )
+    db_token = result.scalars().<span class="fn">first</span>()
+
+    <span class="kw">if not</span> db_token:
+        <span class="kw">raise</span> HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=<span class="st">"Reset token is invalid or has expired"</span>
+        )
+
+    <span class="cm"># 3. Load the user</span>
+    result = <span class="kw">await</span> db.<span class="fn">execute</span>(<span class="fn">select</span>(User).<span class="fn">where</span>(User.id == db_token.user_id))
+    user = result.scalars().<span class="fn">first</span>()
+
+    <span class="cm"># 4. Update the password</span>
+    user.hashed_password = <span class="fn">hash_password</span>(new_password)
+
+    <span class="cm"># 5. Mark the token as used — single use!</span>
+    db_token.used = <span class="kw">True</span>
+
+    <span class="cm"># 6. Revoke all existing refresh tokens (force re-login everywhere)</span>
+    <span class="kw">await</span> db.<span class="fn">execute</span>(
+        <span class="fn">update</span>(RefreshToken)
+        .<span class="fn">where</span>(RefreshToken.user_id == user.id)
+        .<span class="fn">values</span>(revoked=<span class="kw">True</span>)
+    )
+
+    <span class="kw">await</span> db.<span class="fn">commit</span>()
+    <span class="kw">return</span> {<span class="st">"message"</span>: <span class="st">"Password updated successfully"</span>}</pre>
+        </div>
+
+        <h3>Reset Password Endpoint</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/routers/auth.py (reset-password)</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="dc">@router.post</span>(<span class="st">"/reset-password"</span>)
+<span class="kw">async def</span> <span class="fn">reset_password_route</span>(
+    data: <span class="tp">ResetPasswordRequest</span>,
+    db: <span class="tp">AsyncSession</span> = <span class="fn">Depends</span>(get_db)
+):
+    <span class="st">"""Validate reset token and update the user's password."""</span>
+    <span class="kw">return await</span> <span class="fn">reset_password</span>(data.token, data.new_password, db)</pre>
+        </div>
+
+        <h3>What Happens on the Frontend?</h3>
+        <div class="steps">
+          <div class="step">
+            <div class="step-l"><div class="step-dot">1</div><div class="step-line"></div></div>
+            <div class="step-r"><div class="step-t">User opens the email link</div><div class="step-b"><code>https://myapp.com/reset-password?token=abc123…</code></div></div>
+          </div>
+          <div class="step">
+            <div class="step-l"><div class="step-dot">2</div><div class="step-line"></div></div>
+            <div class="step-r"><div class="step-t">Frontend shows a "new password" form</div><div class="step-b">The token value from the URL is kept in component state, invisible to the user.</div></div>
+          </div>
+          <div class="step">
+            <div class="step-l"><div class="step-dot">3</div><div class="step-line"></div></div>
+            <div class="step-r"><div class="step-t">User submits the new password</div><div class="step-b">Frontend sends <code>{"token": "abc123…", "new_password": "NewPass1!"}</code> to <code>POST /auth/reset-password</code>.</div></div>
+          </div>
+          <div class="step">
+            <div class="step-l"><div class="step-dot">4</div></div>
+            <div class="step-r"><div class="step-t">Server confirms, frontend redirects to login</div><div class="step-b">All existing sessions are invalidated. User logs in fresh with the new password.</div></div>
+          </div>
+        </div>
+
+        <div class="callout tip">
+          <span class="callout-mark">UX Tip</span>
+          <div>Validate the token immediately when the reset page loads (call a <code>GET /auth/validate-reset-token?token=…</code> endpoint) and show an error immediately if it's expired, rather than letting the user fill in the form only to get an error on submit.</div>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(7)">← Forgot Password</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:75%"></div></div><div class="prog-label">9 / 12</div></div>
+        <button class="nav-btn fwd" onclick="show(9)">Email Service →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S9: Email Service               -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s9">
+      <div class="sec-eyebrow">Chapter 10 · Password Recovery</div>
+      <h1 class="sec-title">Email Service</h1>
+      <p class="sec-lead">Sending transactional emails reliably requires either an SMTP relay (for development or low volume) or a dedicated transactional email provider like SendGrid or Mailgun (for production).</p>
+      <div class="prose">
+        <h3>Option A — SMTP with fastapi-mail</h3>
+        <p>For development or low-traffic scenarios, SMTP via <code>fastapi-mail</code> is straightforward. Use Mailtrap in development to intercept all outgoing emails safely.</p>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/services/email_service.py (SMTP)</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">from</span> fastapi_mail <span class="kw">import</span> FastMail, MessageSchema, ConnectionConfig
+<span class="kw">from</span> app.config <span class="kw">import</span> settings
+
+conf = <span class="fn">ConnectionConfig</span>(
+    MAIL_USERNAME   = settings.MAIL_USERNAME,
+    MAIL_PASSWORD   = settings.MAIL_PASSWORD,
+    MAIL_FROM       = settings.MAIL_FROM,
+    MAIL_PORT       = settings.MAIL_PORT,
+    MAIL_SERVER     = settings.MAIL_SERVER,
+    MAIL_STARTTLS   = <span class="kw">True</span>,
+    MAIL_SSL_TLS    = <span class="kw">False</span>,
+    USE_CREDENTIALS = <span class="kw">True</span>,
+)
+
+<span class="kw">async def</span> <span class="fn">send_reset_email</span>(email: <span class="tp">str</span>, reset_link: <span class="tp">str</span>):
+    html_body = <span class="fn">f</span><span class="st">"""
+    &lt;h2&gt;Reset Your Password&lt;/h2&gt;
+    &lt;p&gt;You requested a password reset. Click the link below within 30 minutes:&lt;/p&gt;
+    &lt;a href="{reset_link}" style="padding:10px 20px;background:#7c3aed;color:#fff;
+       border-radius:4px;text-decoration:none"&gt;Reset Password&lt;/a&gt;
+    &lt;p&gt;If you did not request this, ignore this email.&lt;/p&gt;
+    """</span>
+
+    message = <span class="fn">MessageSchema</span>(
+        subject    = <span class="st">"Password Reset Request"</span>,
+        recipients = [email],
+        body       = html_body,
+        subtype    = <span class="st">"html"</span>
+    )
+    fm = <span class="fn">FastMail</span>(conf)
+    <span class="kw">await</span> fm.<span class="fn">send_message</span>(message)</pre>
+        </div>
+
+        <h3>Option B — SendGrid HTTP API</h3>
+        <p>For production, the SendGrid HTTP API is more reliable than SMTP. It avoids SMTP port restrictions, provides delivery tracking, and handles bounces automatically.</p>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/services/email_service.py (SendGrid)</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">import</span> httpx
+<span class="kw">from</span> app.config <span class="kw">import</span> settings   <span class="cm"># add SENDGRID_API_KEY to config</span>
+
+<span class="kw">async def</span> <span class="fn">send_reset_email</span>(email: <span class="tp">str</span>, reset_link: <span class="tp">str</span>):
+    <span class="kw">async with</span> httpx.<span class="fn">AsyncClient</span>() <span class="kw">as</span> client:
+        response = <span class="kw">await</span> client.<span class="fn">post</span>(
+            <span class="st">"https://api.sendgrid.com/v3/mail/send"</span>,
+            headers={
+                <span class="st">"Authorization"</span>: <span class="fn">f</span><span class="st">"Bearer {settings.SENDGRID_API_KEY}"</span>,
+                <span class="st">"Content-Type"</span>: <span class="st">"application/json"</span>
+            },
+            json={
+                <span class="st">"personalizations"</span>: [{<span class="st">"to"</span>: [{<span class="st">"email"</span>: email}]}],
+                <span class="st">"from"</span>: {<span class="st">"email"</span>: settings.MAIL_FROM},
+                <span class="st">"subject"</span>: <span class="st">"Reset Your Password"</span>,
+                <span class="st">"content"</span>: [{
+                    <span class="st">"type"</span>: <span class="st">"text/html"</span>,
+                    <span class="st">"value"</span>: <span class="fn">f</span><span class="st">"&lt;a href='{reset_link}'&gt;Reset password&lt;/a&gt;"</span>
+                }]
+            }
+        )
+        response.<span class="fn">raise_for_status</span>()</pre>
+        </div>
+
+        <div class="callout note">
+          <span class="callout-mark">Dev Tip</span>
+          <div>Use <strong>Mailtrap</strong> (mailtrap.io) during development — it catches all outgoing emails without sending them to real inboxes. Set <code>MAIL_SERVER=sandbox.smtp.mailtrap.io</code> in your <code>.env</code>. No risk of accidentally emailing real users.</div>
+        </div>
+
+        <h3>Making Email Non-Blocking</h3>
+        <p>Sending an email over the network should never block the HTTP response. Use FastAPI's <code>BackgroundTasks</code> to fire-and-forget:</p>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/routers/auth.py (background email)</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">from</span> fastapi <span class="kw">import</span> BackgroundTasks
+
+<span class="dc">@router.post</span>(<span class="st">"/forgot-password"</span>)
+<span class="kw">async def</span> <span class="fn">forgot_password_route</span>(
+    data: <span class="tp">ForgotPasswordRequest</span>,
+    background_tasks: <span class="tp">BackgroundTasks</span>,
+    db: <span class="tp">AsyncSession</span> = <span class="fn">Depends</span>(get_db)
+):
+    <span class="cm"># Generate token and build reset_link here…</span>
+    <span class="cm"># Then schedule the email to send after response is returned</span>
+    background_tasks.<span class="fn">add_task</span>(send_reset_email, email=user.email, reset_link=reset_link)
+    <span class="kw">return</span> {<span class="st">"message"</span>: <span class="st">"If this email is registered, you will receive a reset link."</span>}</pre>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(8)">← Reset Password</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:83%"></div></div><div class="prog-label">10 / 12</div></div>
+        <button class="nav-btn fwd" onclick="show(10)">Security Best Practices →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S10: Security Best Practices    -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s10">
+      <div class="sec-eyebrow">Chapter 11 · Production</div>
+      <h1 class="sec-title">Security Best Practices</h1>
+      <p class="sec-lead">An auth service is the highest-value target in your system. These hardening measures are not optional — they are the difference between a secure service and a liability.</p>
+      <div class="prose">
+        <h3>Rate Limiting on Sensitive Endpoints</h3>
+        <p>Brute-force attacks on login, and spam on forgot-password, are trivially easy without rate limiting. Use Redis to count attempts per IP or per email.</p>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/utils/rate_limit.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">from</span> fastapi <span class="kw">import</span> HTTPException, Request
+<span class="kw">from</span> app.utils.redis <span class="kw">import</span> get_redis
+
+<span class="kw">async def</span> <span class="fn">rate_limit</span>(key: <span class="tp">str</span>, max_attempts: <span class="tp">int</span>, window_seconds: <span class="tp">int</span>):
+    <span class="st">"""Increment a counter in Redis. Raise 429 if max_attempts exceeded."""</span>
+    r = <span class="kw">await</span> <span class="fn">get_redis</span>()
+    count = <span class="kw">await</span> r.<span class="fn">incr</span>(key)
+    <span class="kw">if</span> count == <span class="nm">1</span>:
+        <span class="kw">await</span> r.<span class="fn">expire</span>(key, window_seconds)  <span class="cm"># start the window on first hit</span>
+    <span class="kw">if</span> count > max_attempts:
+        <span class="kw">raise</span> HTTPException(
+            status_code=<span class="nm">429</span>,
+            detail=<span class="fn">f</span><span class="st">"Too many attempts. Try again in {window_seconds} seconds."</span>
+        )
+
+<span class="cm"># Usage in login endpoint:</span>
+<span class="cm"># ip = request.client.host</span>
+<span class="cm"># await rate_limit(f"login:{ip}", max_attempts=5, window_seconds=300)</span></pre>
+        </div>
+
+        <h3>Security Checklist</h3>
+        <table class="ref-table">
+          <thead><tr><th>Area</th><th>Requirement</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Passwords</td><td>bcrypt with cost ≥ 12; never log or store plain text</td><td class="mono" style="color:#059669">✓ Covered</td></tr>
+            <tr><td>Tokens</td><td>Short access token lifetime (≤15 min); refresh token rotation</td><td class="mono" style="color:#059669">✓ Covered</td></tr>
+            <tr><td>JWT Secret</td><td>Min. 256-bit random string; stored only in env variables</td><td class="mono" style="color:#059669">✓ Covered</td></tr>
+            <tr><td>Enumeration</td><td>Same response/timing for "user not found" vs "wrong password"</td><td class="mono" style="color:#059669">✓ Covered</td></tr>
+            <tr><td>Reset tokens</td><td>Random 256-bit token; stored as SHA-256 hash; single use; 30 min TTL</td><td class="mono" style="color:#059669">✓ Covered</td></tr>
+            <tr><td>Rate limiting</td><td>Login: 5 attempts/5 min per IP. Forgot-password: 3/hour per email</td><td class="mono" style="color:#b7791f">Add this</td></tr>
+            <tr><td>Transport</td><td>HTTPS only — all tokens must travel over TLS</td><td class="mono" style="color:#b7791f">Infra task</td></tr>
+            <tr><td>Logout</td><td>Blacklist access token; revoke all refresh tokens</td><td class="mono" style="color:#059669">✓ Covered</td></tr>
+            <tr><td>CORS</td><td>Only allow your own frontend origin</td><td class="mono" style="color:#b7791f">Add this</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Adding CORS</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">app/main.py (CORS)</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">from</span> fastapi.middleware.cors <span class="kw">import</span> CORSMiddleware
+
+app.<span class="fn">add_middleware</span>(
+    CORSMiddleware,
+    allow_origins=[settings.FRONTEND_URL],  <span class="cm"># e.g. "https://myapp.com"</span>
+    allow_credentials=<span class="kw">True</span>,               <span class="cm"># needed for HttpOnly cookie refresh</span>
+    allow_methods=[<span class="st">"*"</span>],
+    allow_headers=[<span class="st">"*"</span>],
+)</pre>
+        </div>
+
+        <h3>Structured Error Responses</h3>
+        <p>Always return a consistent error shape so frontends can parse errors programmatically. Never expose stack traces in production.</p>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">Error response format</span></div></div>
+          <pre><span class="cm"># FastAPI's default HTTPException response body:</span>
+{
+  <span class="st">"detail"</span>: <span class="st">"Invalid credentials"</span>
+}
+
+<span class="cm"># For validation errors (422 Unprocessable Entity), FastAPI returns:</span>
+{
+  <span class="st">"detail"</span>: [
+    {
+      <span class="st">"loc"</span>:  [<span class="st">"body"</span>, <span class="st">"password"</span>],
+      <span class="st">"msg"</span>:  <span class="st">"Password must be at least 8 characters"</span>,
+      <span class="st">"type"</span>: <span class="st">"value_error"</span>
+    }
+  ]
+}</pre>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(9)">← Email Service</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:91%"></div></div><div class="prog-label">11 / 12</div></div>
+        <button class="nav-btn fwd" onclick="show(11)">Docker & Integration →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S11: Docker & Integration       -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s11">
+      <div class="sec-eyebrow">Chapter 12 · Production</div>
+      <h1 class="sec-title">Docker & Integration</h1>
+      <p class="sec-lead">Package the auth service in a Docker container and wire it into your broader microservices system. The service needs PostgreSQL, Redis, and network access to send emails — all configured via environment variables.</p>
+      <div class="prose">
+        <h3>Dockerfile</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">Dockerfile</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre>FROM python:<span class="nm">3.11</span>-slim
+
+WORKDIR /app
+
+<span class="cm"># Install dependencies first (Docker cache layer)</span>
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY ./app ./app
+
+EXPOSE <span class="nm">8001</span>
+
+CMD [<span class="st">"uvicorn"</span>, <span class="st">"app.main:app"</span>, <span class="st">"--host"</span>, <span class="st">"0.0.0.0"</span>, <span class="st">"--port"</span>, <span class="st">"8001"</span>]</pre>
+        </div>
+
+        <h3>docker-compose.yml (auth service block)</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">docker-compose.yml</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre>services:
+
+  auth-service:
+    build: ./auth-service
+    networks: [internal]    <span class="cm"># NOT exposed publicly</span>
+    restart: unless-stopped
+    environment:
+      DATABASE_URL:                   postgresql+asyncpg://postgres:${DB_PASS}@auth-db:5432/authdb
+      JWT_SECRET:                     ${JWT_SECRET}
+      REDIS_URL:                      redis://redis:6379
+      MAIL_USERNAME:                  ${MAIL_USERNAME}
+      MAIL_PASSWORD:                  ${MAIL_PASSWORD}
+      MAIL_FROM:                      noreply@myapp.com
+      MAIL_SERVER:                    ${MAIL_SERVER}
+      FRONTEND_URL:                   ${FRONTEND_URL}
+    depends_on:
+      - auth-db
+      - redis
+
+  auth-db:
+    image: postgres:<span class="nm">16</span>-alpine
+    networks: [internal]
+    environment:
+      POSTGRES_DB:       authdb
+      POSTGRES_PASSWORD: ${DB_PASS}
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:<span class="nm">7</span>-alpine
+    networks: [internal]
+    volumes:
+      - redis_data:/data
+
+networks:
+  internal:
+
+volumes:
+  auth_db_data:
+  redis_data:</pre>
+        </div>
+
+        <h3>How the API Gateway Integrates</h3>
+        <p>The gateway validates every incoming JWT using the shared <code>JWT_SECRET</code>. The auth service never needs to be called on every request — only on login, refresh, and logout.</p>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">api-gateway: JWT validation middleware</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="cm"># In the API Gateway, import the same decode_token utility</span>
+<span class="kw">from</span> shared.jwt <span class="kw">import</span> decode_token
+
+<span class="dc">@app.middleware</span>(<span class="st">"http"</span>)
+<span class="kw">async def</span> <span class="fn">auth_middleware</span>(request: Request, call_next):
+    PUBLIC_PATHS = [<span class="st">"/auth/login"</span>, <span class="st">"/auth/register"</span>, <span class="st">"/auth/refresh"</span>,
+                    <span class="st">"/auth/forgot-password"</span>, <span class="st">"/auth/reset-password"</span>, <span class="st">"/health"</span>]
+
+    <span class="kw">if</span> request.url.path <span class="kw">in</span> PUBLIC_PATHS:
+        <span class="kw">return await</span> <span class="fn">call_next</span>(request)  <span class="cm"># no auth needed</span>
+
+    token = request.headers.<span class="fn">get</span>(<span class="st">"Authorization"</span>, <span class="st">""</span>).<span class="fn">removeprefix</span>(<span class="st">"Bearer "</span>)
+    payload = <span class="fn">decode_token</span>(token)
+    <span class="kw">if not</span> payload:
+        <span class="kw">return</span> <span class="fn">JSONResponse</span>({<span class="st">"detail"</span>: <span class="st">"Unauthorized"</span>}, status_code=<span class="nm">401</span>)
+
+    <span class="cm"># Inject user ID so downstream services can use it without re-verifying</span>
+    request.state.user_id = payload[<span class="st">"sub"</span>]
+    response = <span class="kw">await</span> <span class="fn">call_next</span>(request)
+    <span class="kw">return</span> response</pre>
+        </div>
+
+        <div class="callout tip">
+          <span class="callout-mark">Next</span>
+          <div>Extend this auth service with: <strong>email verification</strong> (send a link on register, require <code>is_verified=True</code> to log in), <strong>OAuth2 / Google login</strong> (store a <code>provider</code> field on the user), and <strong>2FA/TOTP</strong> (store a TOTP secret, verify a 6-digit code on login).</div>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(10)">← Security</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:100%"></div></div><div class="prog-label">12 / 12 ✓</div></div>
+        <button class="nav-btn fwd" onclick="show(0)">↑ Back to Start</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+let cur = 0;
+const N = 12;
+const labels = [
+  "Why Auth Service","Project Setup","Database & Models",
+  "Registration","Login & JWT","Token Refresh",
+  "Logout","Forgot Password","Reset Password",
+  "Email Service","Security","Docker"
+];
+
+// Build chapter strip
+const strip = document.getElementById('chStrip');
+labels.forEach((l,i) => {
+  const el = document.createElement('div');
+  el.className = 'ch-pill' + (i===0?' active':'');
+  el.id = 'cp'+i;
+  el.textContent = String(i+1).padStart(2,'0')+'. '+l;
+  el.onclick = () => show(i);
+  strip.appendChild(el);
+});
+
+function show(idx) {
+  document.getElementById('s'+cur).classList.remove('active');
+  document.getElementById('n'+cur).classList.remove('active');
+  document.getElementById('cp'+cur).classList.remove('active');
+  cur = idx;
+  document.getElementById('s'+cur).classList.add('active');
+  document.getElementById('n'+cur).classList.add('active');
+  document.getElementById('cp'+cur).classList.add('active');
+  document.querySelector('main').scrollTop = 0;
+  document.getElementById('cp'+cur).scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+}
+
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = '✓ copied';
+    btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('ok'); }, 2000);
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FastAPI Microservices — Complete Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:wght@700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0f1923;
+  --ink2: #1e2d3d;
+  --muted: #4a5568;
+  --dim: #8898aa;
+  --rule: #c9d4df;
+  --rule2: #e2e8f0;
+  --paper: #f7f5f0;
+  --paper2: #eeeae2;
+  --white: #ffffff;
+  --accent: #c0392b;
+  --accent2: #2563eb;
+  --accent3: #059669;
+  --gold: #b7791f;
+  --grid: rgba(15,25,35,0.04);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; }
+
+body {
+  font-family: 'Source Serif 4', Georgia, serif;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* ── MASTHEAD ── */
+.masthead {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+.masthead::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: repeating-linear-gradient(90deg, var(--accent) 0, var(--accent) 40px, transparent 40px, transparent 48px);
+}
+.masthead-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 3.5rem 2.5rem 2.5rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2rem;
+  align-items: end;
+}
+.masthead-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.masthead-label::before {
+  content: '';
+  display: inline-block;
+  width: 24px;
+  height: 1px;
+  background: var(--accent);
+}
+.masthead h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -.02em;
+  color: var(--white);
+  margin-bottom: .6rem;
+}
+.masthead h1 em {
+  font-style: italic;
+  color: var(--accent);
+}
+.masthead-sub {
+  font-size: 1rem;
+  font-weight: 300;
+  color: #8899aa;
+  line-height: 1.6;
+  max-width: 520px;
+  font-style: italic;
+}
+.masthead-meta {
+  text-align: right;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--dim);
+  line-height: 1.9;
+}
+.masthead-meta strong { color: var(--paper); font-weight: 500; }
+.chapter-strip {
+  background: var(--ink2);
+  border-top: 1px solid rgba(255,255,255,.06);
+  padding: .7rem 2.5rem;
+  max-width: 100%;
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+}
+.chapter-strip::-webkit-scrollbar { display: none; }
+.ch-pill {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .06em;
+  padding: .3rem .9rem;
+  color: #566b82;
+  cursor: pointer;
+  white-space: nowrap;
+  border-right: 1px solid rgba(255,255,255,.06);
+  transition: color .2s, background .2s;
+}
+.ch-pill:hover { color: var(--paper); }
+.ch-pill.active { color: var(--accent); background: rgba(192,57,43,.1); }
+
+/* ── LAYOUT ── */
+.layout {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: calc(100vh - 220px);
+}
+
+/* ── SIDEBAR ── */
+aside {
+  border-right: 1px solid var(--rule);
+  background: rgba(255,255,255,.6);
+  padding: 1.8rem 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+aside::-webkit-scrollbar { width: 2px; }
+aside::-webkit-scrollbar-thumb { background: var(--rule); }
+
+.aside-section {
+  margin-bottom: .3rem;
+}
+.aside-section-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--dim);
+  padding: .8rem 1.4rem .3rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.aside-section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rule2);
+}
+.aside-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: .48rem 1.4rem;
+  font-size: 12.5px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .15s;
+  border-left: 2px solid transparent;
+  line-height: 1.45;
+}
+.aside-item:hover { color: var(--ink); background: rgba(0,0,0,.03); }
+.aside-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(192,57,43,.04); font-weight: 600; }
+.aside-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9.5px;
+  color: var(--rule);
+  min-width: 20px;
+  margin-top: 1px;
+}
+.aside-item.active .aside-num { color: rgba(192,57,43,.4); }
+
+/* ── MAIN ── */
+main {
+  padding: 2.5rem 3rem;
+  overflow-y: auto;
+  background: transparent;
+}
+main::-webkit-scrollbar { width: 4px; }
+main::-webkit-scrollbar-thumb { background: var(--rule); }
+
+.section { display: none; }
+.section.active { display: block; }
+
+/* ── SECTION HEADER ── */
+.sec-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: .6rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sec-eyebrow::before {
+  content: '';
+  width: 16px;
+  height: 2px;
+  background: var(--accent);
+  display: inline-block;
+}
+.sec-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.15;
+  margin-bottom: .6rem;
+}
+.sec-lead {
+  font-size: 1rem;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--muted);
+  line-height: 1.8;
+  max-width: 620px;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--rule2);
+}
+
+/* ── PROSE ── */
+.prose { max-width: 740px; }
+.prose h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 2rem 0 .6rem;
+  padding-bottom: .3rem;
+  border-bottom: 1px solid var(--rule2);
+}
+.prose h4 {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--accent2);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin: 1.4rem 0 .5rem;
+}
+.prose p {
+  font-size: .96rem;
+  color: var(--muted);
+  line-height: 1.9;
+  margin-bottom: .85rem;
+}
+.prose strong { color: var(--ink); font-weight: 600; }
+.prose ul { list-style: none; margin: .6rem 0 1rem; }
+.prose ul li {
+  font-size: .93rem;
+  color: var(--muted);
+  line-height: 1.75;
+  padding: .2rem 0 .2rem 1.4rem;
+  position: relative;
+}
+.prose ul li::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: var(--rule);
+  font-weight: 300;
+}
+code {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .82em;
+  background: var(--paper2);
+  border: 1px solid var(--rule2);
+  border-radius: 3px;
+  padding: 1px 5px;
+  color: var(--accent2);
+}
+
+/* ── CODE BLOCKS ── */
+.code-block {
+  background: var(--ink);
+  border-radius: 6px;
+  margin: 1.2rem 0;
+  overflow: hidden;
+  font-family: 'IBM Plex Mono', monospace;
+  border: 1px solid rgba(255,255,255,.06);
+}
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .55rem 1rem;
+  background: rgba(255,255,255,.04);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.code-dots { display: flex; gap: 5px; }
+.code-dots span {
+  width: 9px; height: 9px; border-radius: 50%;
+}
+.code-dots span:nth-child(1) { background: #ef4444; }
+.code-dots span:nth-child(2) { background: #f59e0b; }
+.code-dots span:nth-child(3) { background: #22c55e; }
+.code-meta { display: flex; align-items: center; gap: 12px; }
+.code-lang { font-size: 10px; color: #4a5568; letter-spacing: .08em; text-transform: uppercase; }
+.code-file { font-size: 11px; color: #94a3b8; }
+.copy-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 4px;
+  padding: 2px 9px;
+  font-size: 10px;
+  color: #64748b;
+  cursor: pointer;
+  transition: all .2s;
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: .04em;
+}
+.copy-btn:hover { color: #e2e8f0; border-color: rgba(255,255,255,.25); }
+.copy-btn.ok { color: #4ade80; border-color: rgba(74,222,128,.3); }
+pre {
+  padding: 1.2rem 1rem;
+  overflow-x: auto;
+  font-size: 12.5px;
+  line-height: 1.75;
+  color: #cdd5e0;
+}
+pre::-webkit-scrollbar { height: 3px; }
+pre::-webkit-scrollbar-thumb { background: #2d3748; }
+
+/* Syntax */
+.kw { color: #f472b6; }
+.fn { color: #67e8f9; }
+.st { color: #86efac; }
+.cm { color: #475569; font-style: italic; }
+.tp { color: #fbbf24; }
+.dc { color: #a78bfa; }
+.nm { color: #fb923c; }
+.pr { color: #94a3b8; }
+
+/* ── CALLOUTS ── */
+.callout {
+  display: flex;
+  gap: 14px;
+  padding: 1rem 1.2rem;
+  margin: 1.2rem 0;
+  font-size: .9rem;
+  line-height: 1.75;
+  font-family: 'Source Serif 4', serif;
+  border-left: 3px solid;
+}
+.callout-mark {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  min-width: 52px;
+  padding-top: 2px;
+}
+.callout.note { background: rgba(37,99,235,.05); border-color: var(--accent2); color: #1e3a5f; }
+.callout.note .callout-mark { color: var(--accent2); }
+.callout.tip { background: rgba(5,150,105,.05); border-color: var(--accent3); color: #064e3b; }
+.callout.tip .callout-mark { color: var(--accent3); }
+.callout.warn { background: rgba(183,121,31,.06); border-color: var(--gold); color: #78350f; }
+.callout.warn .callout-mark { color: var(--gold); }
+.callout.critical { background: rgba(192,57,43,.05); border-color: var(--accent); color: #7f1d1d; }
+.callout.critical .callout-mark { color: var(--accent); }
+
+/* ── SERVICE CARDS ── */
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 1.2rem 0;
+}
+.service-card {
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 1rem 1.1rem;
+  position: relative;
+  overflow: hidden;
+}
+.service-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.service-card.blue::before { background: var(--accent2); }
+.service-card.red::before { background: var(--accent); }
+.service-card.green::before { background: var(--accent3); }
+.service-card.gold::before { background: var(--gold); }
+.service-card.purple::before { background: #7c3aed; }
+.service-card.cyan::before { background: #0891b2; }
+.sc-port {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--dim);
+  margin-bottom: .4rem;
+}
+.sc-name {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: .25rem;
+}
+.sc-desc { font-size: .8rem; color: var(--muted); line-height: 1.5; }
+
+/* ── ENDPOINT BADGES ── */
+.endpoint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: .55rem .8rem;
+  background: var(--white);
+  border: 1px solid var(--rule2);
+  border-radius: 5px;
+  margin: .5rem 0;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.method {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 3px;
+  min-width: 48px;
+  text-align: center;
+  letter-spacing: .04em;
+}
+.get { background: rgba(5,150,105,.1); color: #065f46; border: 1px solid rgba(5,150,105,.2); }
+.post { background: rgba(37,99,235,.1); color: #1e3a8a; border: 1px solid rgba(37,99,235,.2); }
+.put { background: rgba(183,121,31,.1); color: #78350f; border: 1px solid rgba(183,121,31,.2); }
+.del { background: rgba(192,57,43,.1); color: #7f1d1d; border: 1px solid rgba(192,57,43,.2); }
+.endpoint-path { font-size: .85rem; color: var(--ink2); flex: 1; }
+.endpoint-note { font-size: .78rem; color: var(--dim); }
+
+/* ── STEPS ── */
+.steps { margin: 1.2rem 0; }
+.step { display: flex; gap: 16px; }
+.step-l { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+.step-dot {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 1.5px solid var(--rule);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+  flex-shrink: 0;
+}
+.step-line { width: 1px; flex: 1; background: var(--rule2); margin: 4px 0; min-height: 18px; }
+.step-r { padding: 3px 0 1.4rem; flex: 1; }
+.step-t { font-size: .93rem; font-weight: 600; color: var(--ink); margin-bottom: .25rem; font-family: 'IBM Plex Mono', monospace; }
+.step-b { font-size: .88rem; color: var(--muted); line-height: 1.7; }
+
+/* ── TABLE ── */
+.ref-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .86rem;
+  margin: 1rem 0;
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.ref-table thead tr { background: var(--paper2); }
+.ref-table th {
+  padding: .55rem 1rem;
+  text-align: left;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--rule);
+}
+.ref-table td {
+  padding: .55rem 1rem;
+  color: var(--muted);
+  border-bottom: 1px solid var(--rule2);
+  vertical-align: top;
+}
+.ref-table tr:last-child td { border-bottom: none; }
+.ref-table .mono { font-family: 'IBM Plex Mono', monospace; font-size: .82rem; color: var(--ink2); }
+
+/* ── PROGRESS + NAV ── */
+.sec-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule2);
+  gap: 1rem;
+}
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  padding: .55rem 1.2rem;
+  font-size: .84rem;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .2s;
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: .02em;
+}
+.nav-btn:hover { color: var(--ink); border-color: var(--ink2); }
+.nav-btn.fwd { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.nav-btn.fwd:hover { background: var(--ink2); }
+.prog-wrap { text-align: center; }
+.prog-bar {
+  height: 2px;
+  width: 140px;
+  background: var(--rule2);
+  border-radius: 99px;
+  overflow: hidden;
+  margin: 0 auto 4px;
+}
+.prog-fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width .4s; }
+.prog-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--dim); }
+
+@media (max-width: 820px) {
+  .layout { grid-template-columns: 1fr; }
+  aside { display: none; }
+  main { padding: 1.5rem 1.2rem; }
+  .masthead-inner { grid-template-columns: 1fr; }
+  .masthead-meta { text-align: left; }
+}
+</style>
+</head>
+<body>
+
+<!-- MASTHEAD -->
+<header class="masthead">
+  <div class="masthead-inner">
+    <div>
+      <div class="masthead-label">Advanced Course · System Architecture</div>
+      <h1>FastAPI with<br><em>Microservices</em></h1>
+      <p class="masthead-sub">Build a distributed, production-grade system with independent services, an API Gateway, message queuing, service discovery, and JWT-secured inter-service communication.</p>
+    </div>
+    <div class="masthead-meta">
+      <div><strong>20 Chapters</strong></div>
+      <div><strong>6 Services</strong></div>
+      <div>Python 3.11+</div>
+      <div>FastAPI · Docker</div>
+      <div>RabbitMQ · Redis</div>
+      <div>PostgreSQL</div>
+    </div>
+  </div>
+  <div class="chapter-strip" id="chStrip"></div>
+</header>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside>
+    <div class="aside-section">
+      <div class="aside-section-title">Foundations</div>
+      <div class="aside-item active" onclick="show(0)" id="n0"><span class="aside-num">01</span>What Are Microservices?</div>
+      <div class="aside-item" onclick="show(1)" id="n1"><span class="aside-num">02</span>System Architecture</div>
+      <div class="aside-item" onclick="show(2)" id="n2"><span class="aside-num">03</span>Project Setup & Docker</div>
+      <div class="aside-item" onclick="show(3)" id="n3"><span class="aside-num">04</span>Shared Libraries</div>
+    </div>
+    <div class="aside-section">
+      <div class="aside-section-title">Core Services</div>
+      <div class="aside-item" onclick="show(4)" id="n4"><span class="aside-num">05</span>User Service</div>
+      <div class="aside-item" onclick="show(5)" id="n5"><span class="aside-num">06</span>Product Service</div>
+      <div class="aside-item" onclick="show(6)" id="n6"><span class="aside-num">07</span>Order Service</div>
+      <div class="aside-item" onclick="show(7)" id="n7"><span class="aside-num">08</span>Notification Service</div>
+    </div>
+    <div class="aside-section">
+      <div class="aside-section-title">Gateway & Routing</div>
+      <div class="aside-item" onclick="show(8)" id="n8"><span class="aside-num">09</span>API Gateway Pattern</div>
+      <div class="aside-item" onclick="show(9)" id="n9"><span class="aside-num">10</span>Request Routing</div>
+      <div class="aside-item" onclick="show(10)" id="n10"><span class="aside-num">11</span>Rate Limiting & CORS</div>
+    </div>
+    <div class="aside-section">
+      <div class="aside-section-title">Communication</div>
+      <div class="aside-item" onclick="show(11)" id="n11"><span class="aside-num">12</span>Sync HTTP (httpx)</div>
+      <div class="aside-item" onclick="show(12)" id="n12"><span class="aside-num">13</span>Async Messaging (RabbitMQ)</div>
+      <div class="aside-item" onclick="show(13)" id="n13"><span class="aside-num">14</span>Event-Driven Patterns</div>
+    </div>
+    <div class="aside-section">
+      <div class="aside-section-title">Resilience & Ops</div>
+      <div class="aside-item" onclick="show(14)" id="n14"><span class="aside-num">15</span>Health Checks</div>
+      <div class="aside-item" onclick="show(15)" id="n15"><span class="aside-num">16</span>Circuit Breaker</div>
+      <div class="aside-item" onclick="show(16)" id="n16"><span class="aside-num">17</span>Distributed Tracing</div>
+      <div class="aside-item" onclick="show(17)" id="n17"><span class="aside-num">18</span>Redis Caching</div>
+    </div>
+    <div class="aside-section">
+      <div class="aside-section-title">Auth & Deploy</div>
+      <div class="aside-item" onclick="show(18)" id="n18"><span class="aside-num">19</span>JWT Across Services</div>
+      <div class="aside-item" onclick="show(19)" id="n19"><span class="aside-num">20</span>Docker Compose Deploy</div>
+    </div>
+  </aside>
+
+  <main>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S0: What Are Microservices       -->
+    <!-- ════════════════════════════════ -->
+    <div class="section active" id="s0">
+      <div class="sec-eyebrow">Chapter 01 · Foundations</div>
+      <h1 class="sec-title">What Are Microservices?</h1>
+      <p class="sec-lead">Microservices is an architectural style where a large application is decomposed into small, independently deployable services — each owning its own data and communicating over the network.</p>
+      <div class="prose">
+        <h3>Monolith vs Microservices</h3>
+        <p>In a <strong>monolith</strong>, all features — users, products, orders, emails — live in one codebase, share one database, and deploy as one unit. When it grows, it becomes hard to scale individual features, hard to deploy safely, and hard for multiple teams to work in parallel.</p>
+        <p>In a <strong>microservices</strong> architecture, each feature becomes its own independent service with its own database, its own deployment lifecycle, and its own API.</p>
+
+        <div class="callout note">
+          <span class="callout-mark">Note</span>
+          <div>Microservices add operational complexity. They're the right choice when your team and traffic have outgrown what a monolith can handle — not for small projects.</div>
+        </div>
+
+        <h3>The 6 Services We'll Build</h3>
+        <div class="service-grid">
+          <div class="service-card blue">
+            <div class="sc-port">:8000</div>
+            <div class="sc-name">api-gateway</div>
+            <div class="sc-desc">Single entry point. Routes requests to downstream services.</div>
+          </div>
+          <div class="service-card red">
+            <div class="sc-port">:8001</div>
+            <div class="sc-name">user-service</div>
+            <div class="sc-desc">Registration, login, JWT issuance, user profiles.</div>
+          </div>
+          <div class="service-card green">
+            <div class="sc-port">:8002</div>
+            <div class="sc-name">product-service</div>
+            <div class="sc-desc">Product catalog, inventory, pricing.</div>
+          </div>
+          <div class="service-card gold">
+            <div class="sc-port">:8003</div>
+            <div class="sc-name">order-service</div>
+            <div class="sc-desc">Order creation, status tracking, payment events.</div>
+          </div>
+          <div class="service-card purple">
+            <div class="sc-port">:8004</div>
+            <div class="sc-name">notification-service</div>
+            <div class="sc-desc">Email/SMS via RabbitMQ events. No HTTP endpoints.</div>
+          </div>
+          <div class="service-card cyan">
+            <div class="sc-port">:6379</div>
+            <div class="sc-name">redis</div>
+            <div class="sc-desc">Shared cache, rate limiting, session storage.</div>
+          </div>
+        </div>
+
+        <h3>Core Principles We'll Follow</h3>
+        <ul>
+          <li><strong>Single Responsibility</strong> — each service does one thing well</li>
+          <li><strong>Database per Service</strong> — services never share a database directly</li>
+          <li><strong>API-first Communication</strong> — services talk via HTTP or message queues</li>
+          <li><strong>Independent Deployment</strong> — any service can be updated without touching others</li>
+          <li><strong>Failure Isolation</strong> — one service crashing doesn't bring down the system</li>
+        </ul>
+      </div>
+      <div class="sec-footer">
+        <div></div>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:5%"></div></div><div class="prog-label">1 / 20</div></div>
+        <button class="nav-btn fwd" onclick="show(1)">System Architecture →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S1: Architecture                 -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s1">
+      <div class="sec-eyebrow">Chapter 02 · Foundations</div>
+      <h1 class="sec-title">System Architecture</h1>
+      <p class="sec-lead">Map out the full system topology — how services communicate, what protocols they use, and how data flows from a client request to a database write.</p>
+      <div class="prose">
+        <h3>Request Flow</h3>
+        <div class="steps">
+          <div class="step">
+            <div class="step-l"><div class="step-dot">1</div><div class="step-line"></div></div>
+            <div class="step-r"><div class="step-t">Client → API Gateway :8000</div><div class="step-b">Every request enters through the gateway. No client talks directly to a service.</div></div>
+          </div>
+          <div class="step">
+            <div class="step-l"><div class="step-dot">2</div><div class="step-line"></div></div>
+            <div class="step-r"><div class="step-t">Gateway validates JWT</div><div class="step-b">Authenticated routes: gateway verifies the token before proxying. Saves each service from re-implementing auth.</div></div>
+          </div>
+          <div class="step">
+            <div class="step-l"><div class="step-dot">3</div><div class="step-line"></div></div>
+            <div class="step-r"><div class="step-t">Gateway proxies → downstream service</div><div class="step-b">Uses <code>httpx</code> to forward the request, injecting user context in a header.</div></div>
+          </div>
+          <div class="step">
+            <div class="step-l"><div class="step-dot">4</div><div class="step-line"></div></div>
+            <div class="step-r"><div class="step-t">Service executes & publishes events</div><div class="step-b">e.g. Order Service creates an order in its DB, then publishes <code>order.created</code> to RabbitMQ.</div></div>
+          </div>
+          <div class="step">
+            <div class="step-l"><div class="step-dot">5</div></div>
+            <div class="step-r"><div class="step-t">Notification Service consumes event</div><div class="step-b">Asynchronously reads the event and sends an email. The Order Service doesn't wait for this.</div></div>
+          </div>
+        </div>
+
+        <h3>Communication Patterns</h3>
+        <table class="ref-table">
+          <thead><tr><th>Pattern</th><th>Protocol</th><th>Use case</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">Synchronous</td><td class="mono">HTTP (httpx)</td><td>Gateway → Services, Service → Service reads</td></tr>
+            <tr><td class="mono">Asynchronous</td><td class="mono">AMQP (RabbitMQ)</td><td>Order events, notifications, analytics</td></tr>
+            <tr><td class="mono">Cache</td><td class="mono">Redis</td><td>Session data, rate limiting, hot reads</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Database Isolation</h3>
+        <p>Each service gets its own <strong>PostgreSQL database</strong>. They never query each other's DB. If Order Service needs a product's price, it calls the Product Service API — never reads the product table directly.</p>
+
+        <div class="callout tip">
+          <span class="callout-mark">Tip</span>
+          <div>For development we run all Postgres instances in Docker with different port mappings. In production each service would typically have its own managed database cluster.</div>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(0)">← What Are Microservices</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:10%"></div></div><div class="prog-label">2 / 20</div></div>
+        <button class="nav-btn fwd" onclick="show(2)">Project Setup →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S2: Project Setup                -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s2">
+      <div class="sec-eyebrow">Chapter 03 · Foundations</div>
+      <h1 class="sec-title">Project Setup & Docker</h1>
+      <p class="sec-lead">Scaffold the monorepo directory structure and wire every service into a single <code>docker-compose.yml</code>.</p>
+      <div class="prose">
+        <h3>Directory Structure</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-lang">tree</span></div></div>
+          <pre>microservices/
+├── api-gateway/
+│   ├── main.py
+│   ├── middleware.py
+│   └── requirements.txt
+├── user-service/
+│   ├── main.py
+│   ├── models.py
+│   ├── schemas.py
+│   ├── database.py
+│   └── requirements.txt
+├── product-service/    <span class="cm"># same structure</span>
+├── order-service/      <span class="cm"># same structure</span>
+├── notification-service/
+│   ├── consumer.py     <span class="cm"># no HTTP — only queue consumer</span>
+│   └── requirements.txt
+├── shared/
+│   └── auth.py         <span class="cm"># shared JWT utilities</span>
+└── docker-compose.yml</pre>
+        </div>
+
+        <h3>Dockerfile (per service)</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">user-service/Dockerfile</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre>FROM python:<span class="nm">3.11</span>-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+CMD [<span class="st">"uvicorn"</span>, <span class="st">"main:app"</span>, <span class="st">"--host"</span>, <span class="st">"0.0.0.0"</span>, <span class="st">"--port"</span>, <span class="st">"8001"</span>]</pre>
+        </div>
+
+        <h3>docker-compose.yml</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">docker-compose.yml</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre>version: <span class="st">'3.9'</span>
+services:
+
+  api-gateway:
+    build: ./api-gateway
+    ports: [<span class="st">"8000:8000"</span>]
+    environment:
+      - USER_SERVICE_URL=http://user-service:8001
+      - PRODUCT_SERVICE_URL=http://product-service:8002
+      - ORDER_SERVICE_URL=http://order-service:8003
+    depends_on: [user-service, product-service, order-service]
+
+  user-service:
+    build: ./user-service
+    ports: [<span class="st">"8001:8001"</span>]
+    environment:
+      - DATABASE_URL=postgresql://postgres:pass@users-db:5432/users
+    depends_on: [users-db]
+
+  product-service:
+    build: ./product-service
+    ports: [<span class="st">"8002:8002"</span>]
+    environment:
+      - DATABASE_URL=postgresql://postgres:pass@products-db:5432/products
+
+  order-service:
+    build: ./order-service
+    ports: [<span class="st">"8003:8003"</span>]
+    environment:
+      - DATABASE_URL=postgresql://postgres:pass@orders-db:5432/orders
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - PRODUCT_SERVICE_URL=http://product-service:8002
+
+  notification-service:
+    build: ./notification-service
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on: [rabbitmq]
+
+  users-db:
+    image: postgres:<span class="nm">15</span>
+    environment: {POSTGRES_DB: users, POSTGRES_PASSWORD: pass}
+
+  products-db:
+    image: postgres:<span class="nm">15</span>
+    environment: {POSTGRES_DB: products, POSTGRES_PASSWORD: pass}
+
+  orders-db:
+    image: postgres:<span class="nm">15</span>
+    environment: {POSTGRES_DB: orders, POSTGRES_PASSWORD: pass}
+
+  rabbitmq:
+    image: rabbitmq:<span class="nm">3</span>-management
+    ports: [<span class="st">"5672:5672"</span>, <span class="st">"15672:15672"</span>]
+
+  redis:
+    image: redis:<span class="nm">7</span>-alpine
+    ports: [<span class="st">"6379:6379"</span>]</pre>
+        </div>
+
+        <div class="callout tip">
+          <span class="callout-mark">Run</span>
+          <div>Start the entire system with <code>docker compose up --build</code>. Visit <code>localhost:15672</code> for the RabbitMQ management UI (guest/guest).</div>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(1)">← Architecture</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:15%"></div></div><div class="prog-label">3 / 20</div></div>
+        <button class="nav-btn fwd" onclick="show(3)">Shared Libraries →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S3: Shared Libraries             -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s3">
+      <div class="sec-eyebrow">Chapter 04 · Foundations</div>
+      <h1 class="sec-title">Shared Libraries</h1>
+      <p class="sec-lead">Extract common code — JWT utilities, base schemas, error handlers — into a shared package so every service stays DRY.</p>
+      <div class="prose">
+        <h3>shared/auth.py — JWT Utilities</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">shared/auth.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">from</span> jose <span class="kw">import</span> jwt, JWTError
+<span class="kw">from</span> fastapi <span class="kw">import</span> HTTPException, Header
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, timedelta
+<span class="kw">import</span> os
+
+SECRET_KEY = os.getenv(<span class="st">"JWT_SECRET"</span>, <span class="st">"change-in-production"</span>)
+ALGORITHM = <span class="st">"HS256"</span>
+
+<span class="kw">def</span> <span class="fn">create_token</span>(data: <span class="tp">dict</span>, expire_minutes: <span class="tp">int</span> = <span class="nm">60</span>) -> <span class="tp">str</span>:
+    payload = data | {<span class="st">"exp"</span>: datetime.utcnow() + timedelta(minutes=expire_minutes)}
+    <span class="kw">return</span> jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+<span class="kw">def</span> <span class="fn">decode_token</span>(token: <span class="tp">str</span>) -> <span class="tp">dict</span>:
+    <span class="kw">try</span>:
+        <span class="kw">return</span> jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    <span class="kw">except</span> JWTError:
+        <span class="kw">raise</span> HTTPException(<span class="nm">401</span>, <span class="st">"Invalid or expired token"</span>)
+
+<span class="cm"># Dependency: extract user context from X-User-ID header</span>
+<span class="cm"># (set by the gateway after verifying the JWT)</span>
+<span class="kw">def</span> <span class="fn">get_user_id</span>(x_user_id: <span class="tp">str</span> = Header(<span class="kw">None</span>)) -> <span class="tp">int</span>:
+    <span class="kw">if not</span> x_user_id:
+        <span class="kw">raise</span> HTTPException(<span class="nm">401</span>, <span class="st">"Missing user context"</span>)
+    <span class="kw">return</span> int(x_user_id)</pre>
+        </div>
+
+        <h3>shared/base_schemas.py</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">shared/base_schemas.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">from</span> pydantic <span class="kw">import</span> BaseModel
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+
+<span class="kw">class</span> <span class="tp">TimestampMixin</span>(BaseModel):
+    created_at: datetime
+    updated_at: datetime
+    model_config = {<span class="st">"from_attributes"</span>: <span class="kw">True</span>}
+
+<span class="kw">class</span> <span class="tp">ErrorResponse</span>(BaseModel):
+    detail: <span class="tp">str</span>
+    code: <span class="tp">str</span> | <span class="kw">None</span> = <span class="kw">None</span></pre>
+        </div>
+
+        <div class="callout note">
+          <span class="callout-mark">Note</span>
+          <div>In a real project, publish <code>shared/</code> as an internal pip package (e.g. on a private PyPI server). For this tutorial we mount it as a Docker volume into each service.</div>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(2)">← Project Setup</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:20%"></div></div><div class="prog-label">4 / 20</div></div>
+        <button class="nav-btn fwd" onclick="show(4)">User Service →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S4: User Service                 -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s4">
+      <div class="sec-eyebrow">Chapter 05 · Core Services</div>
+      <h1 class="sec-title">User Service</h1>
+      <p class="sec-lead">The User Service owns all identity: registration, login, password hashing, and JWT token issuance. It's the only service that writes to the <code>users</code> database.</p>
+      <div class="prose">
+        <h3>Endpoints</h3>
+        <div class="endpoint"><span class="method post">POST</span><span class="endpoint-path">/users/register</span><span class="endpoint-note">Create account, hash password</span></div>
+        <div class="endpoint"><span class="method post">POST</span><span class="endpoint-path">/users/login</span><span class="endpoint-note">Verify credentials, return JWT</span></div>
+        <div class="endpoint"><span class="method get">GET</span><span class="endpoint-path">/users/me</span><span class="endpoint-note">Return current user profile</span></div>
+        <div class="endpoint"><span class="method get">GET</span><span class="endpoint-path">/users/{user_id}</span><span class="endpoint-note">Internal: called by other services</span></div>
+
+        <h3>main.py</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">user-service/main.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI, Depends, HTTPException, status
+<span class="kw">from</span> sqlalchemy.orm <span class="kw">import</span> Session
+<span class="kw">from</span> passlib.context <span class="kw">import</span> CryptContext
+<span class="kw">from</span> database <span class="kw">import</span> get_db
+<span class="kw">import</span> models, schemas
+<span class="kw">from</span> shared.auth <span class="kw">import</span> create_token, get_user_id
+
+app = FastAPI(title=<span class="st">"User Service"</span>)
+pwd = CryptContext(schemes=[<span class="st">"bcrypt"</span>])
+
+models.Base.metadata.create_all(bind=engine)
+
+<span class="dc">@app.post</span>(<span class="st">"/users/register"</span>, response_model=schemas.UserOut, status_code=<span class="nm">201</span>)
+<span class="kw">def</span> <span class="fn">register</span>(body: schemas.UserCreate, db: Session = Depends(get_db)):
+    <span class="kw">if</span> db.query(models.User).filter_by(email=body.email).first():
+        <span class="kw">raise</span> HTTPException(<span class="nm">400</span>, <span class="st">"Email already registered"</span>)
+    user = models.User(
+        email=body.email,
+        name=body.name,
+        hashed_password=pwd.hash(body.password)
+    )
+    db.add(user); db.commit(); db.refresh(user)
+    <span class="kw">return</span> user
+
+<span class="dc">@app.post</span>(<span class="st">"/users/login"</span>)
+<span class="kw">def</span> <span class="fn">login</span>(body: schemas.UserLogin, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter_by(email=body.email).first()
+    <span class="kw">if not</span> user <span class="kw">or not</span> pwd.verify(body.password, user.hashed_password):
+        <span class="kw">raise</span> HTTPException(<span class="nm">401</span>, <span class="st">"Invalid credentials"</span>)
+    token = create_token({<span class="st">"sub"</span>: user.email, <span class="st">"user_id"</span>: user.id})
+    <span class="kw">return</span> {<span class="st">"access_token"</span>: token, <span class="st">"token_type"</span>: <span class="st">"bearer"</span>}
+
+<span class="dc">@app.get</span>(<span class="st">"/users/me"</span>, response_model=schemas.UserOut)
+<span class="kw">def</span> <span class="fn">get_me</span>(user_id: <span class="tp">int</span> = Depends(get_user_id), db: Session = Depends(get_db)):
+    <span class="kw">return</span> db.query(models.User).get(user_id)</pre>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(3)">← Shared Libraries</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:25%"></div></div><div class="prog-label">5 / 20</div></div>
+        <button class="nav-btn fwd" onclick="show(5)">Product Service →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S5: Product Service              -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s5">
+      <div class="sec-eyebrow">Chapter 06 · Core Services</div>
+      <h1 class="sec-title">Product Service</h1>
+      <p class="sec-lead">The Product Service manages the catalog. It exposes read endpoints publicly and write endpoints only to authenticated admins. Inventory decrements are triggered by order events.</p>
+      <div class="prose">
+        <h3>Endpoints</h3>
+        <div class="endpoint"><span class="method get">GET</span><span class="endpoint-path">/products</span><span class="endpoint-note">List products (public, cached)</span></div>
+        <div class="endpoint"><span class="method get">GET</span><span class="endpoint-path">/products/{id}</span><span class="endpoint-note">Get product (public)</span></div>
+        <div class="endpoint"><span class="method post">POST</span><span class="endpoint-path">/products</span><span class="endpoint-note">Create product (admin only)</span></div>
+        <div class="endpoint"><span class="method put">PUT</span><span class="endpoint-path">/products/{id}/inventory</span><span class="endpoint-note">Update stock (internal only)</span></div>
+
+        <h3>main.py</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">product-service/main.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI, Depends, HTTPException
+<span class="kw">from</span> sqlalchemy.orm <span class="kw">import</span> Session
+<span class="kw">from</span> database <span class="kw">import</span> get_db
+<span class="kw">import</span> models, schemas
+
+app = FastAPI(title=<span class="st">"Product Service"</span>)
+
+<span class="dc">@app.get</span>(<span class="st">"/products"</span>, response_model=<span class="tp">list</span>[schemas.ProductOut])
+<span class="kw">def</span> <span class="fn">list_products</span>(
+    skip: <span class="tp">int</span> = <span class="nm">0</span>, limit: <span class="tp">int</span> = <span class="nm">20</span>,
+    db: Session = Depends(get_db)
+):
+    <span class="kw">return</span> db.query(models.Product).offset(skip).limit(limit).all()
+
+<span class="dc">@app.get</span>(<span class="st">"/products/{product_id}"</span>, response_model=schemas.ProductOut)
+<span class="kw">def</span> <span class="fn">get_product</span>(product_id: <span class="tp">int</span>, db: Session = Depends(get_db)):
+    p = db.get(models.Product, product_id)
+    <span class="kw">if not</span> p:
+        <span class="kw">raise</span> HTTPException(<span class="nm">404</span>, <span class="st">"Product not found"</span>)
+    <span class="kw">return</span> p
+
+<span class="dc">@app.put</span>(<span class="st">"/products/{product_id}/inventory"</span>)
+<span class="kw">def</span> <span class="fn">decrement_inventory</span>(
+    product_id: <span class="tp">int</span>,
+    body: schemas.InventoryUpdate,
+    db: Session = Depends(get_db)
+):
+    <span class="cm"># Called internally by order-service via HTTP</span>
+    p = db.get(models.Product, product_id)
+    <span class="kw">if</span> p.stock < body.quantity:
+        <span class="kw">raise</span> HTTPException(<span class="nm">409</span>, <span class="st">"Insufficient stock"</span>)
+    p.stock -= body.quantity
+    db.commit()
+    <span class="kw">return</span> {<span class="st">"remaining_stock"</span>: p.stock}</pre>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(4)">← User Service</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:30%"></div></div><div class="prog-label">6 / 20</div></div>
+        <button class="nav-btn fwd" onclick="show(6)">Order Service →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S6: Order Service                -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s6">
+      <div class="sec-eyebrow">Chapter 07 · Core Services</div>
+      <h1 class="sec-title">Order Service</h1>
+      <p class="sec-lead">The most complex service — it creates orders, calls Product Service to decrement stock, and publishes an <code>order.created</code> event to RabbitMQ for the Notification Service to consume.</p>
+      <div class="prose">
+        <h3>Endpoints</h3>
+        <div class="endpoint"><span class="method post">POST</span><span class="endpoint-path">/orders</span><span class="endpoint-note">Create order (auth required)</span></div>
+        <div class="endpoint"><span class="method get">GET</span><span class="endpoint-path">/orders</span><span class="endpoint-note">My orders (auth required)</span></div>
+        <div class="endpoint"><span class="method get">GET</span><span class="endpoint-path">/orders/{id}</span><span class="endpoint-note">Order detail</span></div>
+
+        <h3>main.py — Full create_order flow</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">order-service/main.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">import</span> httpx, json, aio_pika, os
+<span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI, Depends, HTTPException
+<span class="kw">from</span> sqlalchemy.orm <span class="kw">import</span> Session
+<span class="kw">from</span> database <span class="kw">import</span> get_db
+<span class="kw">from</span> shared.auth <span class="kw">import</span> get_user_id
+<span class="kw">import</span> models, schemas
+
+app = FastAPI(title=<span class="st">"Order Service"</span>)
+PRODUCT_URL = os.getenv(<span class="st">"PRODUCT_SERVICE_URL"</span>)
+RABBITMQ_URL = os.getenv(<span class="st">"RABBITMQ_URL"</span>)
+
+<span class="dc">@app.post</span>(<span class="st">"/orders"</span>, response_model=schemas.OrderOut, status_code=<span class="nm">201</span>)
+<span class="kw">async def</span> <span class="fn">create_order</span>(
+    body: schemas.OrderCreate,
+    user_id: <span class="tp">int</span> = Depends(get_user_id),
+    db: Session = Depends(get_db)
+):
+    <span class="cm"># 1. Verify product exists and has stock</span>
+    <span class="kw">async with</span> httpx.AsyncClient() <span class="kw">as</span> client:
+        res = <span class="kw">await</span> client.put(
+            <span class="fn">f</span><span class="st">"{PRODUCT_URL}/products/{body.product_id}/inventory"</span>,
+            json={<span class="st">"quantity"</span>: body.quantity}
+        )
+        <span class="kw">if</span> res.status_code != <span class="nm">200</span>:
+            <span class="kw">raise</span> HTTPException(res.status_code, res.json().get(<span class="st">"detail"</span>))
+
+    <span class="cm"># 2. Persist the order</span>
+    order = models.Order(
+        user_id=user_id,
+        product_id=body.product_id,
+        quantity=body.quantity,
+        total_price=res.json()[<span class="st">"unit_price"</span>] * body.quantity,
+        status=<span class="st">"CONFIRMED"</span>
+    )
+    db.add(order); db.commit(); db.refresh(order)
+
+    <span class="cm"># 3. Publish event to RabbitMQ (fire-and-forget)</span>
+    <span class="kw">await</span> publish_event(<span class="st">"order.created"</span>, {
+        <span class="st">"order_id"</span>: order.id,
+        <span class="st">"user_id"</span>: user_id,
+        <span class="st">"product_id"</span>: body.product_id,
+        <span class="st">"total_price"</span>: order.total_price
+    })
+    <span class="kw">return</span> order
+
+<span class="kw">async def</span> <span class="fn">publish_event</span>(routing_key: <span class="tp">str</span>, payload: <span class="tp">dict</span>):
+    conn = <span class="kw">await</span> aio_pika.connect_robust(RABBITMQ_URL)
+    <span class="kw">async with</span> conn:
+        channel = <span class="kw">await</span> conn.channel()
+        exchange = <span class="kw">await</span> channel.declare_exchange(<span class="st">"orders"</span>, aio_pika.ExchangeType.TOPIC)
+        <span class="kw">await</span> exchange.publish(
+            aio_pika.Message(json.dumps(payload).encode()),
+            routing_key=routing_key
+        )</pre>
+        </div>
+
+        <div class="callout warn">
+          <span class="callout-mark">Watch out</span>
+          <div>This is a simplified example. In production, use a <strong>saga pattern</strong> or <strong>transactional outbox</strong> to avoid partial failures between the DB write and the queue publish.</div>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(5)">← Product Service</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:35%"></div></div><div class="prog-label">7 / 20</div></div>
+        <button class="nav-btn fwd" onclick="show(7)">Notification Service →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S7: Notification Service         -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s7">
+      <div class="sec-eyebrow">Chapter 08 · Core Services</div>
+      <h1 class="sec-title">Notification Service</h1>
+      <p class="sec-lead">A pure event consumer — no HTTP server, no database. It listens to the RabbitMQ <code>orders</code> exchange and sends emails when orders are confirmed.</p>
+      <div class="prose">
+        <h3>consumer.py — RabbitMQ Listener</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">notification-service/consumer.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">import</span> asyncio, aio_pika, json, os, smtplib
+<span class="kw">from</span> email.mime.text <span class="kw">import</span> MIMEText
+
+RABBITMQ_URL = os.getenv(<span class="st">"RABBITMQ_URL"</span>)
+
+<span class="kw">async def</span> <span class="fn">handle_order_created</span>(message: aio_pika.IncomingMessage):
+    <span class="kw">async with</span> message.process():     <span class="cm"># auto-ack on success</span>
+        data = json.loads(message.body)
+        print(<span class="fn">f</span><span class="st">"📧 Sending confirmation for order #{data['order_id']}"</span>)
+        <span class="fn">send_email</span>(
+            to=<span class="fn">f</span><span class="st">"user_{data['user_id']}@example.com"</span>,
+            subject=<span class="fn">f</span><span class="st">"Order #{data['order_id']} Confirmed"</span>,
+            body=<span class="fn">f</span><span class="st">"Your order total: ${data['total_price']:.2f}"</span>
+        )
+
+<span class="kw">def</span> <span class="fn">send_email</span>(to: <span class="tp">str</span>, subject: <span class="tp">str</span>, body: <span class="tp">str</span>):
+    <span class="cm"># Use smtplib, sendgrid, etc.</span>
+    print(<span class="fn">f</span><span class="st">"[MAIL] To: {to} | {subject}"</span>)
+
+<span class="kw">async def</span> <span class="fn">main</span>():
+    conn = <span class="kw">await</span> aio_pika.connect_robust(RABBITMQ_URL)
+    channel = <span class="kw">await</span> conn.channel()
+    
+    exchange = <span class="kw">await</span> channel.declare_exchange(
+        <span class="st">"orders"</span>, aio_pika.ExchangeType.TOPIC, durable=<span class="kw">True</span>
+    )
+    queue = <span class="kw">await</span> channel.declare_queue(<span class="st">"notification_queue"</span>, durable=<span class="kw">True</span>)
+    <span class="kw">await</span> queue.bind(exchange, routing_key=<span class="st">"order.*"</span>)  <span class="cm"># all order events</span>
+    
+    print(<span class="st">"🐇 Notification Service waiting for messages..."</span>)
+    <span class="kw">await</span> queue.consume(handle_order_created)
+    <span class="kw">await</span> asyncio.Future()  <span class="cm"># run forever</span>
+
+asyncio.run(main())</pre>
+        </div>
+
+        <div class="callout tip">
+          <span class="callout-mark">Pattern</span>
+          <div>Notice this service has <strong>no FastAPI app</strong>. It's just a plain async Python script. This is perfectly valid — not every microservice needs to be an HTTP server.</div>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(6)">← Order Service</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:40%"></div></div><div class="prog-label">8 / 20</div></div>
+        <button class="nav-btn fwd" onclick="show(8)">API Gateway Pattern →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S8: API Gateway Pattern          -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s8">
+      <div class="sec-eyebrow">Chapter 09 · Gateway & Routing</div>
+      <h1 class="sec-title">API Gateway Pattern</h1>
+      <p class="sec-lead">The gateway is the single entry point for all clients. It handles authentication, request routing, rate limiting, and response aggregation — shielding services from direct exposure.</p>
+      <div class="prose">
+        <h3>Gateway Responsibilities</h3>
+        <ul>
+          <li><strong>JWT verification</strong> — validates the token once, injects user context into forwarded requests</li>
+          <li><strong>Request proxying</strong> — forwards requests to the correct service using <code>httpx</code></li>
+          <li><strong>Rate limiting</strong> — per-IP or per-user request throttling via Redis</li>
+          <li><strong>CORS headers</strong> — centralised cross-origin policy, services don't need to know about it</li>
+          <li><strong>Request/response logging</strong> — one place to log all traffic</li>
+        </ul>
+
+        <h3>gateway/main.py skeleton</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">api-gateway/main.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">import</span> httpx, os
+<span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI, Request, HTTPException, Depends
+<span class="kw">from</span> fastapi.middleware.cors <span class="kw">import</span> CORSMiddleware
+<span class="kw">from</span> shared.auth <span class="kw">import</span> decode_token
+
+app = FastAPI(title=<span class="st">"API Gateway"</span>)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[<span class="st">"*"</span>],   <span class="cm"># tighten in production</span>
+    allow_methods=[<span class="st">"*"</span>],
+    allow_headers=[<span class="st">"*"</span>],
+)
+
+ROUTES = {
+    <span class="st">"/users"</span>:    os.getenv(<span class="st">"USER_SERVICE_URL"</span>),
+    <span class="st">"/products"</span>: os.getenv(<span class="st">"PRODUCT_SERVICE_URL"</span>),
+    <span class="st">"/orders"</span>:   os.getenv(<span class="st">"ORDER_SERVICE_URL"</span>),
+}
+
+<span class="cm"># Routes that don't require authentication</span>
+PUBLIC_PATHS = {<span class="st">"/users/register"</span>, <span class="st">"/users/login"</span>, <span class="st">"/products"</span>}
+
+<span class="kw">async def</span> <span class="fn">verify_auth</span>(request: Request) -> <span class="tp">dict</span> | <span class="kw">None</span>:
+    path = request.url.path
+    <span class="kw">if any</span>(path.startswith(p) <span class="kw">for</span> p <span class="kw">in</span> PUBLIC_PATHS):
+        <span class="kw">return None</span>
+    auth = request.headers.get(<span class="st">"Authorization"</span>, <span class="st">""</span>)
+    <span class="kw">if not</span> auth.startswith(<span class="st">"Bearer "</span>):
+        <span class="kw">raise</span> HTTPException(<span class="nm">401</span>, <span class="st">"Missing token"</span>)
+    <span class="kw">return</span> decode_token(auth.split()[<span class="nm">1</span>])</pre>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(7)">← Notification Service</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:45%"></div></div><div class="prog-label">9 / 20</div></div>
+        <button class="nav-btn fwd" onclick="show(9)">Request Routing →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S9: Request Routing              -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s9">
+      <div class="sec-eyebrow">Chapter 10 · Gateway & Routing</div>
+      <h1 class="sec-title">Request Routing</h1>
+      <p class="sec-lead">A single catch-all route proxy that forwards any request to the correct service, injects the verified user ID, and streams back the response.</p>
+      <div class="prose">
+        <h3>Universal Proxy Handler</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">api-gateway/main.py (continued)</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre"><span class="kw">from</span> fastapi.responses <span class="kw">import</span> Response
+
+<span class="dc">@app.api_route</span>(<span class="st">"/{path:path}"</span>, methods=[<span class="st">"GET"</span>,<span class="st">"POST"</span>,<span class="st">"PUT"</span>,<span class="st">"DELETE"</span>,<span class="st">"PATCH"</span>])
+<span class="kw">async def</span> <span class="fn">proxy</span>(path: <span class="tp">str</span>, request: Request, claims=Depends(verify_auth)):
+    <span class="cm"># Find the right service for this path prefix</span>
+    target_url = <span class="kw">None</span>
+    <span class="kw">for</span> prefix, base_url <span class="kw">in</span> ROUTES.items():
+        <span class="kw">if</span> request.url.path.startswith(prefix):
+            target_url = base_url + request.url.path
+            <span class="kw">break</span>
+
+    <span class="kw">if not</span> target_url:
+        <span class="kw">raise</span> HTTPException(<span class="nm">404</span>, <span class="st">"Unknown service"</span>)
+
+    <span class="cm"># Forward headers + inject user context</span>
+    headers = dict(request.headers)
+    <span class="kw">if</span> claims:
+        headers[<span class="st">"X-User-ID"</span>] = <span class="fn">str</span>(claims[<span class="st">"user_id"</span>])
+        headers[<span class="st">"X-User-Email"</span>] = claims[<span class="st">"sub"</span>]
+
+    <span class="kw">async with</span> httpx.AsyncClient() <span class="kw">as</span> client:
+        resp = <span class="kw">await</span> client.request(
+            method=request.method,
+            url=target_url,
+            headers=headers,
+            content=<span class="kw">await</span> request.body(),
+            params=request.query_params,
+            timeout=<span class="nm">30.0</span>
+        )
+
+    <span class="kw">return</span> Response(
+        content=resp.content,
+        status_code=resp.status_code,
+        headers=dict(resp.headers),
+        media_type=resp.headers.get(<span class="st">"content-type"</span>)
+    )</pre>
+        </div>
+
+        <div class="callout note">
+          <span class="callout-mark">Note</span>
+          <div>Services receive <code>X-User-ID</code> and <code>X-User-Email</code> headers. They trust these because they're in a private Docker network — not reachable from the public internet. Never expose service ports externally.</div>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(8)">← Gateway Pattern</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:50%"></div></div><div class="prog-label">10 / 20</div></div>
+        <button class="nav-btn fwd" onclick="show(10)">Rate Limiting →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S10: Rate Limiting               -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s10">
+      <div class="sec-eyebrow">Chapter 11 · Gateway & Routing</div>
+      <h1 class="sec-title">Rate Limiting & CORS</h1>
+      <p class="sec-lead">Protect your services from abuse by limiting request rates with Redis counters, and configure CORS properly for browser clients.</p>
+      <div class="prose">
+        <h3>Redis-backed Rate Limiter</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">api-gateway/middleware.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">import</span> redis.asyncio <span class="kw">as</span> redis
+<span class="kw">from</span> fastapi <span class="kw">import</span> Request, HTTPException
+<span class="kw">import</span> os, time
+
+pool = redis.ConnectionPool.from_url(os.getenv(<span class="st">"REDIS_URL"</span>, <span class="st">"redis://redis:6379"</span>))
+
+<span class="kw">async def</span> <span class="fn">rate_limit</span>(request: Request, limit: <span class="tp">int</span> = <span class="nm">60</span>, window: <span class="tp">int</span> = <span class="nm">60</span>):
+    <span class="cm"># Identify by IP (or authenticated user ID)</span>
+    client_ip = request.client.host
+    key = <span class="fn">f</span><span class="st">"rate:{client_ip}:{int(time.time()) // window}"</span>
+    
+    r = redis.Redis(connection_pool=pool)
+    count = <span class="kw">await</span> r.incr(key)
+    
+    <span class="kw">if</span> count == <span class="nm">1</span>:
+        <span class="kw">await</span> r.expire(key, window)   <span class="cm"># set TTL on first hit</span>
+    
+    <span class="kw">if</span> count > limit:
+        <span class="kw">raise</span> HTTPException(
+            status_code=<span class="nm">429</span>,
+            detail=<span class="st">"Too many requests"</span>,
+            headers={<span class="st">"Retry-After"</span>: <span class="fn">str</span>(window)}
+        )
+
+<span class="cm"># Apply as a dependency on the proxy route</span>
+<span class="dc">@app.api_route</span>(<span class="st">"/{path:path}"</span>, methods=[<span class="st">"GET"</span>,<span class="st">"POST"</span>,<span class="st">"PUT"</span>,<span class="st">"DELETE"</span>])
+<span class="kw">async def</span> <span class="fn">proxy</span>(request: Request, _=Depends(rate_limit), claims=Depends(verify_auth)):
+    ...</pre>
+        </div>
+
+        <h3>CORS Configuration</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">api-gateway/main.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre>app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        <span class="st">"https://myapp.com"</span>,
+        <span class="st">"http://localhost:3000"</span>   <span class="cm"># dev frontend</span>
+    ],
+    allow_credentials=<span class="kw">True</span>,
+    allow_methods=[<span class="st">"GET"</span>, <span class="st">"POST"</span>, <span class="st">"PUT"</span>, <span class="st">"DELETE"</span>],
+    allow_headers=[<span class="st">"*"</span>],
+)</pre>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(9)">← Request Routing</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:55%"></div></div><div class="prog-label">11 / 20</div></div>
+        <button class="nav-btn fwd" onclick="show(11)">Sync HTTP →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S11: Sync HTTP                   -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s11">
+      <div class="sec-eyebrow">Chapter 12 · Service Communication</div>
+      <h1 class="sec-title">Synchronous HTTP (httpx)</h1>
+      <p class="sec-lead">When a service needs data from another service immediately — like Order Service checking product price — it makes a direct HTTP call using <code>httpx</code>.</p>
+      <div class="prose">
+        <h3>Async HTTP Client with Retry</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">order-service/http_client.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">import</span> httpx
+<span class="kw">from</span> tenacity <span class="kw">import</span> retry, stop_after_attempt, wait_exponential
+
+<span class="cm"># Reuse a single client (connection pooling)</span>
+_client: httpx.AsyncClient | <span class="kw">None</span> = <span class="kw">None</span>
+
+<span class="kw">async def</span> <span class="fn">get_client</span>() -> httpx.AsyncClient:
+    <span class="kw">global</span> _client
+    <span class="kw">if</span> _client <span class="kw">is None</span>:
+        _client = httpx.AsyncClient(timeout=<span class="nm">10.0</span>)
+    <span class="kw">return</span> _client
+
+<span class="dc">@retry</span>(stop=stop_after_attempt(<span class="nm">3</span>), wait=wait_exponential(min=<span class="nm">0.5</span>, max=<span class="nm">4</span>))
+<span class="kw">async def</span> <span class="fn">get_product</span>(product_id: <span class="tp">int</span>) -> <span class="tp">dict</span>:
+    client = <span class="kw">await</span> get_client()
+    resp = <span class="kw">await</span> client.get(<span class="fn">f</span><span class="st">"{PRODUCT_URL}/products/{product_id}"</span>)
+    resp.raise_for_status()  <span class="cm"># raises on 4xx/5xx</span>
+    <span class="kw">return</span> resp.json()
+
+<span class="cm"># Startup/shutdown lifecycle</span>
+<span class="dc">@app.on_event</span>(<span class="st">"startup"</span>)
+<span class="kw">async def</span> <span class="fn">startup</span>():
+    <span class="kw">await</span> get_client()
+
+<span class="dc">@app.on_event</span>(<span class="st">"shutdown"</span>)
+<span class="kw">async def</span> <span class="fn">shutdown</span>():
+    <span class="kw">if</span> _client: <span class="kw">await</span> _client.aclose()</pre>
+        </div>
+
+        <div class="callout tip">
+          <span class="callout-mark">Tip</span>
+          <div>Always use a <strong>shared client</strong> (connection pool) rather than creating a new <code>httpx.AsyncClient()</code> per request. The latter opens a new TCP connection every time — catastrophic under load.</div>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(10)">← Rate Limiting</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:60%"></div></div><div class="prog-label">12 / 20</div></div>
+        <button class="nav-btn fwd" onclick="show(12)">Async Messaging →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S12: RabbitMQ                    -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s12">
+      <div class="sec-eyebrow">Chapter 13 · Service Communication</div>
+      <h1 class="sec-title">Async Messaging with RabbitMQ</h1>
+      <p class="sec-lead">For fire-and-forget operations — notifications, analytics writes, audit logs — services publish events to a message broker. Consumers process them independently and at their own pace.</p>
+      <div class="prose">
+        <h3>Exchange Types</h3>
+        <table class="ref-table">
+          <thead><tr><th>Type</th><th>Routing</th><th>Use case</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">direct</td><td>Exact routing key</td><td>Task queues, 1-to-1</td></tr>
+            <tr><td class="mono">topic</td><td>Pattern (order.*)</td><td>Event bus, pub/sub</td></tr>
+            <tr><td class="mono">fanout</td><td>All queues</td><td>Broadcast, logging</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Publisher (Order Service)</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">order-service/publisher.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">import</span> aio_pika, json
+
+<span class="kw">class</span> <span class="tp">EventPublisher</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, rabbitmq_url: <span class="tp">str</span>):
+        self.url = rabbitmq_url
+        self.connection = <span class="kw">None</span>
+
+    <span class="kw">async def</span> <span class="fn">connect</span>(self):
+        self.connection = <span class="kw">await</span> aio_pika.connect_robust(self.url)
+        self.channel = <span class="kw">await</span> self.connection.channel()
+        self.exchange = <span class="kw">await</span> self.channel.declare_exchange(
+            <span class="st">"orders"</span>, aio_pika.ExchangeType.TOPIC, durable=<span class="kw">True</span>
+        )
+
+    <span class="kw">async def</span> <span class="fn">publish</span>(self, routing_key: <span class="tp">str</span>, payload: <span class="tp">dict</span>):
+        <span class="kw">await</span> self.exchange.publish(
+            aio_pika.Message(
+                body=json.dumps(payload).encode(),
+                delivery_mode=aio_pika.DeliveryMode.PERSISTENT  <span class="cm"># survive restart</span>
+            ),
+            routing_key=routing_key
+        )
+
+publisher = EventPublisher(os.getenv(<span class="st">"RABBITMQ_URL"</span>))</pre>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(11)">← Sync HTTP</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:65%"></div></div><div class="prog-label">13 / 20</div></div>
+        <button class="nav-btn fwd" onclick="show(13)">Event Patterns →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S13: Event Patterns              -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s13">
+      <div class="sec-eyebrow">Chapter 14 · Service Communication</div>
+      <h1 class="sec-title">Event-Driven Patterns</h1>
+      <p class="sec-lead">Standardize your events with a consistent schema, implement idempotency to handle duplicate deliveries, and use dead-letter queues for failed messages.</p>
+      <div class="prose">
+        <h3>Standard Event Schema</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">shared/events.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">from</span> pydantic <span class="kw">import</span> BaseModel, Field
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+<span class="kw">from</span> uuid <span class="kw">import</span> uuid4
+
+<span class="kw">class</span> <span class="tp">BaseEvent</span>(BaseModel):
+    event_id: <span class="tp">str</span> = Field(default_factory=<span class="kw">lambda</span>: <span class="fn">str</span>(uuid4()))
+    event_type: <span class="tp">str</span>
+    source_service: <span class="tp">str</span>
+    timestamp: <span class="tp">datetime</span> = Field(default_factory=datetime.utcnow)
+    payload: <span class="tp">dict</span>
+
+<span class="cm"># Usage</span>
+event = BaseEvent(
+    event_type=<span class="st">"order.created"</span>,
+    source_service=<span class="st">"order-service"</span>,
+    payload={<span class="st">"order_id"</span>: <span class="nm">42</span>, <span class="st">"user_id"</span>: <span class="nm">7</span>}
+)</pre>
+        </div>
+
+        <h3>Idempotency — Handle Duplicate Messages</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">notification-service/consumer.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">async def</span> <span class="fn">handle_order_created</span>(message: aio_pika.IncomingMessage):
+    <span class="kw">async with</span> message.process():
+        event = BaseEvent(**json.loads(message.body))
+        
+        <span class="cm"># Redis dedup: skip if we've already processed this event_id</span>
+        already_processed = <span class="kw">await</span> redis.get(<span class="fn">f</span><span class="st">"processed:{event.event_id}"</span>)
+        <span class="kw">if</span> already_processed:
+            <span class="kw">return</span>  <span class="cm"># idempotent — safe to skip</span>
+        
+        <span class="cm"># Process the event</span>
+        <span class="fn">send_email</span>(event.payload)
+        
+        <span class="cm"># Mark as processed (expire after 24h)</span>
+        <span class="kw">await</span> redis.setex(<span class="fn">f</span><span class="st">"processed:{event.event_id}"</span>, <span class="nm">86400</span>, <span class="st">"1"</span>)</pre>
+        </div>
+
+        <div class="callout warn">
+          <span class="callout-mark">Critical</span>
+          <div>RabbitMQ <strong>guarantees at-least-once delivery</strong> — your consumers must be idempotent. The same message can arrive twice after a network hiccup. Always deduplicate using the event_id.</div>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(12)">← RabbitMQ</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:70%"></div></div><div class="prog-label">14 / 20</div></div>
+        <button class="nav-btn fwd" onclick="show(14)">Health Checks →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S14: Health Checks               -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s14">
+      <div class="sec-eyebrow">Chapter 15 · Resilience & Ops</div>
+      <h1 class="sec-title">Health Checks</h1>
+      <p class="sec-lead">Every service exposes a <code>/health</code> endpoint so Docker, Kubernetes, and the gateway can verify it's alive and ready to serve traffic.</p>
+      <div class="prose">
+        <h3>Comprehensive Health Endpoint</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">shared/health.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI
+<span class="kw">from</span> sqlalchemy.orm <span class="kw">import</span> Session
+<span class="kw">from</span> database <span class="kw">import</span> SessionLocal
+<span class="kw">import</span> time
+
+<span class="kw">def</span> <span class="fn">add_health_routes</span>(app: FastAPI):
+    
+    <span class="dc">@app.get</span>(<span class="st">"/health"</span>, tags=[<span class="st">"Health"</span>])
+    <span class="kw">async def</span> <span class="fn">health</span>():
+        checks = {}
+        
+        <span class="cm"># DB check</span>
+        <span class="kw">try</span>:
+            db: Session = SessionLocal()
+            db.execute(<span class="st">"SELECT 1"</span>)
+            checks[<span class="st">"database"</span>] = <span class="st">"ok"</span>
+        <span class="kw">except</span> Exception <span class="kw">as</span> e:
+            checks[<span class="st">"database"</span>] = <span class="st">"error"</span>
+        <span class="kw">finally</span>:
+            db.close()
+
+        status = <span class="st">"healthy"</span> <span class="kw">if all</span>(v == <span class="st">"ok"</span> <span class="kw">for</span> v <span class="kw">in</span> checks.values()) <span class="kw">else</span> <span class="st">"degraded"</span>
+        return {
+            <span class="st">"status"</span>: status,
+            <span class="st">"checks"</span>: checks,
+            <span class="st">"timestamp"</span>: time.time()
+        }
+    
+    <span class="dc">@app.get</span>(<span class="st">"/ready"</span>, tags=[<span class="st">"Health"</span>])
+    <span class="kw">async def</span> <span class="fn">ready</span>():
+        <span class="cm"># Called by k8s readiness probe</span>
+        <span class="kw">return</span> {<span class="st">"ready"</span>: <span class="kw">True</span>}</pre>
+        </div>
+
+        <h3>Docker Compose Healthcheck</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">docker-compose.yml (addition)</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre>user-service:
+  build: ./user-service
+  healthcheck:
+    test: [<span class="st">"CMD"</span>, <span class="st">"curl"</span>, <span class="st">"-f"</span>, <span class="st">"http://localhost:8001/health"</span>]
+    interval: <span class="nm">30</span>s
+    timeout: <span class="nm">10</span>s
+    retries: <span class="nm">3</span>
+    start_period: <span class="nm">40</span>s</pre>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(13)">← Event Patterns</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:75%"></div></div><div class="prog-label">15 / 20</div></div>
+        <button class="nav-btn fwd" onclick="show(15)">Circuit Breaker →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S15: Circuit Breaker             -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s15">
+      <div class="sec-eyebrow">Chapter 16 · Resilience & Ops</div>
+      <h1 class="sec-title">Circuit Breaker</h1>
+      <p class="sec-lead">Prevent cascading failures. When Product Service is down, Order Service shouldn't keep hammering it — it should fail fast and return a cached or degraded response.</p>
+      <div class="prose">
+        <h3>Circuit Breaker with pybreaker</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">order-service/http_client.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">import</span> pybreaker
+<span class="kw">import</span> httpx
+
+<span class="cm"># Open circuit after 5 failures; retry after 30s</span>
+product_breaker = pybreaker.CircuitBreaker(
+    fail_max=<span class="nm">5</span>,
+    reset_timeout=<span class="nm">30</span>
+)
+
+<span class="dc">@product_breaker</span>
+<span class="kw">async def</span> <span class="fn">get_product_price</span>(product_id: <span class="tp">int</span>) -> <span class="tp">float</span>:
+    <span class="kw">async with</span> httpx.AsyncClient() <span class="kw">as</span> c:
+        resp = <span class="kw">await</span> c.get(<span class="fn">f</span><span class="st">"{PRODUCT_URL}/products/{product_id}"</span>)
+        resp.raise_for_status()
+        <span class="kw">return</span> resp.json()[<span class="st">"price"</span>]
+
+<span class="cm"># Wrap the call with fallback behaviour</span>
+<span class="kw">async def</span> <span class="fn">safe_get_product_price</span>(product_id: <span class="tp">int</span>) -> <span class="tp">float</span> | <span class="kw">None</span>:
+    <span class="kw">try</span>:
+        <span class="kw">return</span> <span class="kw">await</span> get_product_price(product_id)
+    <span class="kw">except</span> pybreaker.CircuitBreakerError:
+        <span class="cm"># Circuit is OPEN — fail fast, return cached or None</span>
+        cached = <span class="kw">await</span> redis.get(<span class="fn">f</span><span class="st">"product_price:{product_id}"</span>)
+        <span class="kw">return</span> <span class="tp">float</span>(cached) <span class="kw">if</span> cached <span class="kw">else None</span></pre>
+        </div>
+
+        <h3>Circuit States</h3>
+        <table class="ref-table">
+          <thead><tr><th>State</th><th>Behaviour</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">CLOSED</td><td>Normal operation — requests pass through</td></tr>
+            <tr><td class="mono">OPEN</td><td>Fail fast — stop calling the broken service</td></tr>
+            <tr><td class="mono">HALF-OPEN</td><td>Probe with one request to see if service recovered</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(14)">← Health Checks</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:80%"></div></div><div class="prog-label">16 / 20</div></div>
+        <button class="nav-btn fwd" onclick="show(16)">Distributed Tracing →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S16: Tracing                     -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s16">
+      <div class="sec-eyebrow">Chapter 17 · Resilience & Ops</div>
+      <h1 class="sec-title">Distributed Tracing</h1>
+      <p class="sec-lead">Correlate logs and trace a single request as it hops through multiple services using a shared <code>X-Request-ID</code> header and structured logging.</p>
+      <div class="prose">
+        <h3>Request ID Propagation</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">shared/tracing.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">from</span> fastapi <span class="kw">import</span> Request
+<span class="kw">from</span> starlette.middleware.base <span class="kw">import</span> BaseHTTPMiddleware
+<span class="kw">import</span> uuid, logging, time, json
+
+logger = logging.getLogger(<span class="st">"service"</span>)
+
+<span class="kw">class</span> <span class="tp">TracingMiddleware</span>(BaseHTTPMiddleware):
+    <span class="kw">async def</span> <span class="fn">dispatch</span>(self, request: Request, call_next):
+        request_id = request.headers.get(<span class="st">"X-Request-ID"</span>, <span class="fn">str</span>(uuid4()))
+        start = time.time()
+        
+        response = <span class="kw">await</span> call_next(request)
+        
+        duration_ms = (time.time() - start) * <span class="nm">1000</span>
+        logger.info(json.dumps({
+            <span class="st">"request_id"</span>: request_id,
+            <span class="st">"method"</span>: request.method,
+            <span class="st">"path"</span>: request.url.path,
+            <span class="st">"status"</span>: response.status_code,
+            <span class="st">"duration_ms"</span>: <span class="fn">round</span>(duration_ms, <span class="nm">2</span>)
+        }))
+        
+        response.headers[<span class="st">"X-Request-ID"</span>] = request_id
+        <span class="kw">return</span> response
+
+<span class="cm"># Add to every service</span>
+app.add_middleware(TracingMiddleware)</pre>
+        </div>
+
+        <div class="callout note">
+          <span class="callout-mark">Next step</span>
+          <div>For production, use <strong>OpenTelemetry</strong> with <code>opentelemetry-instrumentation-fastapi</code> to send traces to Jaeger or Grafana Tempo — giving you a full waterfall view of each cross-service request.</div>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(15)">← Circuit Breaker</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:85%"></div></div><div class="prog-label">17 / 20</div></div>
+        <button class="nav-btn fwd" onclick="show(17)">Redis Caching →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S17: Redis Caching               -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s17">
+      <div class="sec-eyebrow">Chapter 18 · Resilience & Ops</div>
+      <h1 class="sec-title">Redis Caching</h1>
+      <p class="sec-lead">Cache expensive reads — product listings, user profiles — in Redis to reduce database load and dramatically improve response times.</p>
+      <div class="prose">
+        <h3>Cache Decorator</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">shared/cache.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="kw">import</span> redis.asyncio <span class="kw">as</span> aioredis
+<span class="kw">import</span> json, functools
+<span class="kw">from</span> typing <span class="kw">import</span> Callable
+
+redis_client = aioredis.from_url(<span class="st">"redis://redis:6379"</span>)
+
+<span class="kw">def</span> <span class="fn">cache</span>(ttl: <span class="tp">int</span> = <span class="nm">300</span>, prefix: <span class="tp">str</span> = <span class="st">""</span>):
+    <span class="st">"""Decorator: cache the result in Redis for `ttl` seconds."""</span>
+    <span class="kw">def</span> <span class="fn">decorator</span>(func: Callable):
+        <span class="dc">@functools.wraps</span>(func)
+        <span class="kw">async def</span> <span class="fn">wrapper</span>(*args, **kwargs):
+            key = <span class="fn">f</span><span class="st">"{prefix}:{func.__name__}:{args}:{kwargs}"</span>
+            cached = <span class="kw">await</span> redis_client.get(key)
+            <span class="kw">if</span> cached:
+                <span class="kw">return</span> json.loads(cached)       <span class="cm"># cache HIT</span>
+            result = <span class="kw">await</span> func(*args, **kwargs)
+            <span class="kw">await</span> redis_client.setex(key, ttl, json.dumps(result))
+            <span class="kw">return</span> result                        <span class="cm"># cache MISS → stored</span>
+        <span class="kw">return</span> wrapper
+    <span class="kw">return</span> decorator
+
+<span class="cm"># Usage in product-service</span>
+<span class="dc">@cache</span>(ttl=<span class="nm">120</span>, prefix=<span class="st">"products"</span>)
+<span class="kw">async def</span> <span class="fn">get_all_products</span>(skip: <span class="tp">int</span>, limit: <span class="tp">int</span>):
+    <span class="kw">return</span> ... <span class="cm"># DB query</span>
+
+<span class="cm"># Invalidate on product update</span>
+<span class="kw">async def</span> <span class="fn">invalidate_product_cache</span>(product_id: <span class="tp">int</span>):
+    pattern = <span class="fn">f</span><span class="st">"products:*"</span>
+    keys = <span class="kw">await</span> redis_client.keys(pattern)
+    <span class="kw">if</span> keys:
+        <span class="kw">await</span> redis_client.delete(*keys)</pre>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(16)">← Distributed Tracing</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:90%"></div></div><div class="prog-label">18 / 20</div></div>
+        <button class="nav-btn fwd" onclick="show(18)">JWT Across Services →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S18: JWT                         -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s18">
+      <div class="sec-eyebrow">Chapter 19 · Auth & Deploy</div>
+      <h1 class="sec-title">JWT Across Services</h1>
+      <p class="sec-lead">A unified authentication strategy: the User Service issues JWTs, the Gateway verifies them, and services trust the injected headers — eliminating redundant token checks.</p>
+      <div class="prose">
+        <h3>The Auth Flow End-to-End</h3>
+        <div class="steps">
+          <div class="step">
+            <div class="step-l"><div class="step-dot">1</div><div class="step-line"></div></div>
+            <div class="step-r"><div class="step-t">POST /users/login → User Service</div><div class="step-b">Returns <code>{"access_token": "eyJ...", "token_type": "bearer"}</code></div></div>
+          </div>
+          <div class="step">
+            <div class="step-l"><div class="step-dot">2</div><div class="step-line"></div></div>
+            <div class="step-r"><div class="step-t">Client stores token, sends on every request</div><div class="step-b"><code>Authorization: Bearer eyJ...</code> header on all protected calls</div></div>
+          </div>
+          <div class="step">
+            <div class="step-l"><div class="step-dot">3</div><div class="step-line"></div></div>
+            <div class="step-r"><div class="step-t">Gateway verifies the JWT</div><div class="step-b">Calls <code>decode_token()</code> from shared lib. Returns 401 if invalid/expired.</div></div>
+          </div>
+          <div class="step">
+            <div class="step-l"><div class="step-dot">4</div></div>
+            <div class="step-r"><div class="step-t">Gateway injects X-User-ID header</div><div class="step-b">Services read <code>X-User-ID</code> via the <code>get_user_id</code> dependency — no re-verification needed.</div></div>
+          </div>
+        </div>
+
+        <h3>Service-to-Service Auth</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">shared/service_auth.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="cm"># Internal service calls use a shared secret header</span>
+SERVICE_SECRET = os.getenv(<span class="st">"SERVICE_SECRET"</span>, <span class="st">"internal-secret"</span>)
+
+<span class="kw">def</span> <span class="fn">verify_internal_call</span>(x_service_secret: <span class="tp">str</span> = Header(<span class="kw">None</span>)):
+    <span class="kw">if</span> x_service_secret != SERVICE_SECRET:
+        <span class="kw">raise</span> HTTPException(<span class="nm">403</span>, <span class="st">"Not an internal call"</span>)
+
+<span class="cm"># On the inventory endpoint (internal only)</span>
+<span class="dc">@app.put</span>(<span class="st">"/products/{id}/inventory"</span>, dependencies=[Depends(verify_internal_call)])
+<span class="kw">async def</span> <span class="fn">update_inventory</span>(...):
+    ...</pre>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(17)">← Redis Caching</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:95%"></div></div><div class="prog-label">19 / 20</div></div>
+        <button class="nav-btn fwd" onclick="show(19)">Deploy →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!-- S19: Deploy                      -->
+    <!-- ════════════════════════════════ -->
+    <div class="section" id="s19">
+      <div class="sec-eyebrow">Chapter 20 · Auth & Deploy</div>
+      <h1 class="sec-title">Docker Compose Deploy</h1>
+      <p class="sec-lead">Pull the entire system together. Production-ready compose configuration with environment secrets, network isolation, and restart policies.</p>
+      <div class="prose">
+        <h3>Production docker-compose.yml (additions)</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">docker-compose.prod.yml</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre>version: <span class="st">'3.9'</span>
+
+networks:
+  public:          <span class="cm"># gateway only</span>
+  internal:        <span class="cm"># all services</span>
+
+services:
+  api-gateway:
+    image: myrepo/api-gateway:<span class="st">${VERSION:-latest}</span>
+    networks: [public, internal]
+    ports: [<span class="st">"80:8000"</span>]
+    restart: unless-stopped
+    environment:
+      - JWT_SECRET=<span class="st">${JWT_SECRET}</span>
+      - SERVICE_SECRET=<span class="st">${SERVICE_SECRET}</span>
+
+  user-service:
+    image: myrepo/user-service:<span class="st">${VERSION:-latest}</span>
+    networks: [internal]   <span class="cm"># NOT exposed publicly</span>
+    restart: unless-stopped
+    deploy:
+      replicas: <span class="nm">2</span>          <span class="cm"># horizontal scaling</span>
+      resources:
+        limits: {cpus: <span class="st">'0.5'</span>, memory: 256M}
+    environment:
+      - DATABASE_URL=<span class="st">${USERS_DB_URL}</span>
+      - JWT_SECRET=<span class="st">${JWT_SECRET}</span>
+
+  <span class="cm"># ... product-service, order-service same pattern</span>
+
+  rabbitmq:
+    image: rabbitmq:<span class="nm">3</span>-management-alpine
+    networks: [internal]
+    volumes: [rabbitmq_data:/var/lib/rabbitmq]
+    restart: unless-stopped
+
+volumes:
+  rabbitmq_data:</pre>
+        </div>
+
+        <h3>Go-Live Checklist</h3>
+        <ul>
+          <li>All secrets in environment variables — never hardcoded</li>
+          <li>Service ports <strong>not</strong> exposed externally — only the gateway binds to 80/443</li>
+          <li>Health checks configured on all services</li>
+          <li><code>restart: unless-stopped</code> on every service</li>
+          <li>Persistent volumes for databases and RabbitMQ</li>
+          <li>TLS termination at the gateway (nginx or Traefik in front)</li>
+        </ul>
+
+        <h3>Run It</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-meta"><span class="code-file">terminal</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div></div>
+          <pre><span class="cm"># Build and start all services</span>
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+<span class="cm"># Check all services are healthy</span>
+docker compose ps
+
+<span class="cm"># Tail logs from all services</span>
+docker compose logs -f
+
+<span class="cm"># Scale order-service to 3 replicas</span>
+docker compose up -d --scale order-service=<span class="nm">3</span></pre>
+        </div>
+
+        <div class="callout tip">
+          <span class="callout-mark">Next</span>
+          <div>Ready to go further? Migrate to <strong>Kubernetes</strong> (k8s) for auto-scaling, self-healing, and rolling deploys. Add <strong>Prometheus + Grafana</strong> for metrics dashboards. Use <strong>Alembic</strong> for database migrations per service.</div>
+        </div>
+      </div>
+      <div class="sec-footer">
+        <button class="nav-btn" onclick="show(18)">← JWT Auth</button>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:100%"></div></div><div class="prog-label">20 / 20 ✓</div></div>
+        <button class="nav-btn fwd" onclick="show(0)">↑ Back to Start</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+let cur = 0;
+const N = 20;
+const labels = [
+  "Microservices?","Architecture","Docker Setup","Shared Libs",
+  "User Service","Product Service","Order Service","Notification Svc",
+  "Gateway Pattern","Request Routing","Rate Limiting","Sync HTTP",
+  "RabbitMQ","Event Patterns","Health Checks","Circuit Breaker",
+  "Tracing","Redis Cache","JWT Auth","Deploy"
+];
+
+// Build chapter strip
+const strip = document.getElementById('chStrip');
+labels.forEach((l,i) => {
+  const el = document.createElement('div');
+  el.className = 'ch-pill' + (i===0?' active':'');
+  el.id = 'cp'+i;
+  el.textContent = String(i+1).padStart(2,'0')+'. '+l;
+  el.onclick = () => show(i);
+  strip.appendChild(el);
+});
+
+function show(idx) {
+  document.getElementById('s'+cur).classList.remove('active');
+  document.getElementById('n'+cur).classList.remove('active');
+  document.getElementById('cp'+cur).classList.remove('active');
+  cur = idx;
+  document.getElementById('s'+cur).classList.add('active');
+  document.getElementById('n'+cur).classList.add('active');
+  document.getElementById('cp'+cur).classList.add('active');
+  document.querySelector('main').scrollTop = 0;
+  document.getElementById('cp'+cur).scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+}
+
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = '✓ copied';
+    btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('ok'); }, 2000);
+  });
+}
+</script>
+</body>
+</html>
